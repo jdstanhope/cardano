@@ -55,6 +55,19 @@ commit.
 Write the test first wherever there is behaviour to test. Follow the patterns already
 in the codebase rather than introducing new ones.
 
+**Keep the change small and self-contained.** A diff must be readable in one sitting;
+**over ~100 changed lines is too large** and should be split. Size is measured on
+`git diff --stat origin/main...HEAD`.
+
+- One issue, one concern, one PR. Resolve an unrelated problem found along the way by
+  opening a separate issue, not by widening this branch.
+- If work is heading past the limit, stop and propose a split before writing more.
+  Splitting a finished branch is far more expensive than sequencing it up front.
+- Generated files and vendored content don't count toward the limit; say so explicitly
+  when they're the reason a diff looks large.
+- Exceeding the limit requires saying so, and why, when presenting the PR. It is an
+  exception to be justified, never a default.
+
 ### 4. Verify — this is what "done" means
 
 ```sh
@@ -62,8 +75,13 @@ docker compose exec app bin/ci
 ```
 
 **The work is not done until this exits 0.** It runs RuboCop, Brakeman, bundler-audit,
-the importmap audit, the test suite, and seeds — the same checks GitHub Actions runs
-against the PR.
+the importmap audit, the test suite, and seeds.
+
+A green gate is necessary but not sufficient: `bin/ci` and `.github/workflows/ci.yml`
+are separate definitions and can drift. GitHub additionally runs `test:system` and
+prepares the test database with `db:test:prepare`, which `bin/ci` does not. Always
+check the PR's checks after opening it, and treat any divergence as a bug in `bin/ci`
+worth its own issue.
 
 - Never report work as complete, finished, or passing without running this and showing
   the actual output.
@@ -86,6 +104,38 @@ gh pr create --title "<title>" --body "<body>"
 
 The body must contain `Closes #<issue-number>` so the issue closes on merge, and must
 include the risk analysis below.
+
+## Merging
+
+**Merge commits only.** Squash and rebase merging are disabled on the repository, so
+the GitHub merge button offers only "Create a merge commit". This is deliberate.
+
+Squashing replaces a branch's commits with a new commit that shares no ancestry with
+them. Git then cannot tell that those commits are already in `main`, so any other
+branch carrying them hits conflicts on changes that were already resolved once. Merge
+commits keep the ancestry, which keeps parallel branches cheap to reconcile, and the
+merge commit's second parent is a permanent record that the work happened on its own
+branch.
+
+For the collapsed one-line-per-PR view of history:
+
+```sh
+git log --first-parent main
+```
+
+### Keeping a branch current
+
+Rebase while the branch is private; merge once it has been pushed.
+
+```sh
+# not yet pushed — rebase to keep history tidy
+git fetch origin && git rebase origin/main
+
+# already pushed or shared — merge, never rewrite
+git fetch origin && git merge origin/main
+```
+
+Never force-push a branch that someone else may have pulled.
 
 ## Risk analysis
 
