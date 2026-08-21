@@ -30,15 +30,39 @@ which yields exact figures rather than the estimates a simulation would produce.
 high-value symbol.
 
 **Reel** — one vertical strip of symbols. A spin stops each reel independently, and
-the game window shows a few consecutive positions from each.
+the reel window shows a few consecutive positions from each.
 
 **Stop** — a single position on a reel strip where it can come to rest. The number of
 stops on a reel, and how often a given symbol occupies one, is what sets the
 probability of that symbol appearing. Adding one more `A` to a reel changes the RTP.
 
-**Payline** — a fixed path across the reels, taking one visible position from each,
-along which matching symbols are counted. A game defines a set of these, and a spin is
-evaluated against every one of them.
+**Reel window** — the grid of positions visible after a spin, and the only place
+matching happens. It has two dimensions: the number of reels available for matching,
+normally the same as the number of reels the game defines, and the number of rows
+available. A five-reel game showing three rows has a 5x3 window of fifteen positions.
+
+The window is **rectangular to begin with** — every reel shows the same number of rows.
+A later version may let the row count vary per reel, which changes both the shape of
+the window and which paylines can be drawn through it, so the rectangular case is worth
+getting right first.
+
+**Payline** — a fixed path through the reel window, taking one position from each reel
+in play, along which matching symbols are counted. A game defines a set of these, and a
+spin is evaluated against every one of them. The window's height bounds which paths can
+exist: three rows allow a line to take row 1, 2, or 3 on any given reel.
+
+**Winning combination** — the symbols on a payline that actually form a paytable entry.
+Reading from the leftmost reel, it is the leading run of matching symbols; anything
+further along the line that does not extend that run is outside the combination. A
+payline produces at most one, and produces none when no entry matches.
+
+```
+payline symbols:  A  A  A  K  Q
+                  └───────┘
+                  winning combination = A×3
+
+The K and Q lie on the payline but outside the combination.
+```
 
 **Paytable** — the mapping from a winning combination to what it pays, keyed by symbol
 and by how many of that symbol landed in a row. For example `A×3 = 5`, `A×4 = 25`,
@@ -51,6 +75,7 @@ answer:
 
 - a **base game** only
 - a **static set of reels**, each with a fixed set of **stops**
+- a **rectangular reel window** of fixed dimensions
 - **fixed paylines**
 - a **paytable** mapping symbol and count to a payout
 
@@ -63,6 +88,10 @@ outcome space and needs the base to be correct first.
 The base game is a starting point rather than the intended scope. Ways-based wins,
 wilds and scatters, and free-spin features are the natural next steps, each building on
 the same exhaustive evaluation.
+
+A non-rectangular reel window — a differing number of rows per reel — is a further
+expansion. It affects the outcome space and the set of drawable paylines rather than
+adding a feature on top, so it is worth taking only once the rectangular case is solid.
 
 ## Development with Docker
 
