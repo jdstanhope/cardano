@@ -8,9 +8,13 @@ decide how often the game pays, how much it returns over its lifetime, and how i
 feels to play. Cardano exists to make those consequences visible while the design is
 still being decided, rather than after the game has been built.
 
+The tool holds many games, and each game can carry several variations — alternate
+configurations of the same game tuned to different RTP figures.
+
 ## What it computes
 
-Given a complete game definition, the tool evaluates the outcome space and reports:
+Given a complete definition of a game variation, the tool evaluates the outcome space
+and reports:
 
 | Figure | Meaning |
 | ------ | ------- |
@@ -68,26 +72,54 @@ The K and Q lie on the payline but outside the combination.
 and by how many of that symbol landed in a row. For example `A×3 = 5`, `A×4 = 25`,
 `A×5 = 100`, as a multiple of the stake on that line.
 
+**Game** — one titled slot game: its symbols, its reel window, its paylines, and the
+variations below. The tool is built to hold many games rather than model one at a time.
+
+**Variation** — one complete, playable configuration of a game. Variations exist mainly
+to offer the same game at **different RTP figures**, which operators and jurisdictions
+routinely require: the same title might ship at 96%, 94%, and 92%.
+
+A variation differs from its siblings in its **reel strips**, and possibly in its
+**paytable**. Changing which symbols occupy which stops changes every probability in
+the game, so it is the primary lever for moving RTP; adjusting the paytable is the
+secondary one. The symbols, reel window, and paylines are properties of the game and
+are shared across its variations, so the variations remain recognisably the same game
+to a player.
+
+Every figure under [What it computes](#what-it-computes) belongs to a variation, not to
+a game. A game does not have one RTP; each of its variations does.
+
 ## Starting scope
 
 The first implementation is deliberately the smallest thing that produces a real
 answer:
 
+- a **game** carrying a **single variation**
 - a **base game** only
 - a **static set of reels**, each with a fixed set of **stops**
 - a **rectangular reel window** of fixed dimensions
 - **fixed paylines**
 - a **paytable** mapping symbol and count to a payout
 
-Explicitly not included yet: wilds and scatters, free spins, bonus rounds and feature
-triggers, ways or cluster pays, and progressive jackpots. Each of those multiplies the
-outcome space and needs the base to be correct first.
+Explicitly not included yet: multiple variations per game, wilds and scatters, free
+spins, bonus rounds and feature triggers, ways or cluster pays, and progressive
+jackpots. Each of those multiplies the outcome space and needs the base to be correct
+first.
+
+Supporting one variation is a starting point, not a simplification to design around:
+the structure should treat a game as owning a collection of variations from the outset,
+so that adding the second is configuration rather than rework.
 
 ## Where it goes from here
 
 The base game is a starting point rather than the intended scope. Ways-based wins,
 wilds and scatters, and free-spin features are the natural next steps, each building on
 the same exhaustive evaluation.
+
+Multiple variations per game come earlier than any of those, since the ability to
+produce a title at several RTP figures is the point of the tool rather than an
+enhancement to it. Once a single variation evaluates correctly, the work is holding
+several and comparing them side by side.
 
 A non-rectangular reel window — a differing number of rows per reel — is a further
 expansion. It affects the outcome space and the set of drawable paylines rather than
