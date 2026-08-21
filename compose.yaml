@@ -1,0 +1,51 @@
+name: cardano
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: cardano
+      POSTGRES_PASSWORD: password
+    volumes:
+      # postgres:18 sets PGDATA to /var/lib/postgresql/18/docker and declares its
+      # volume one level up, so the whole directory is what needs to persist.
+      - postgres-data:/var/lib/postgresql
+    ports:
+      # Bound to loopback so the database isn't reachable from the local network.
+      # Drop this line if 5432 is already taken on the host.
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cardano"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: bin/dev
+    environment:
+      DB_HOST: postgres
+      DB_USERNAME: cardano
+      DB_PASSWORD: password
+    ports:
+      # Loopback-only: development exposes web-console, an interactive REPL on error
+      # pages, which must never be reachable from the local network.
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - .:/rails
+      # Gems live in a volume so they survive `docker compose down` and are not
+      # clobbered by the bind mount above.
+      - bundle:/usr/local/bundle
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Keeps `debugger` / `binding.irb` usable via `docker compose attach app`.
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres-data:
+  bundle:

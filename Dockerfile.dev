@@ -1,0 +1,42 @@
+# syntax=docker/dockerfile:1
+# check=error=true
+
+# This Dockerfile is for local development only. The production image is ./Dockerfile.
+#
+#   docker compose up
+#
+# Application code is bind-mounted from the host at runtime (see compose.yaml), so
+# only the gem bundle is baked into this image.
+
+# Make sure RUBY_VERSION matches the Ruby version in .ruby-version
+ARG RUBY_VERSION=4.0.6
+FROM docker.io/library/ruby:$RUBY_VERSION-slim
+
+# Rails app lives here
+WORKDIR /rails
+
+# Packages needed to build gems (libpq-dev for pg, libvips for image_processing) and to
+# talk to the database from the command line (postgresql-client, for bin/rails dbconsole).
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y \
+      build-essential curl git libpq-dev libvips libyaml-dev pkg-config postgresql-client && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+ENV RAILS_ENV="development" \
+    BUNDLE_PATH="/usr/local/bundle" \
+    BINDING="0.0.0.0"
+
+# bin/dev shells out to foreman; pre-install it so it isn't fetched on every boot.
+RUN gem install foreman
+
+# Install application gems. Only the manifests are copied so this layer is reused
+# until the Gemfile actually changes.
+COPY Gemfile Gemfile.lock ./
+RUN bundle install
+
+COPY bin/docker-dev-entrypoint /usr/local/bin/
+
+ENTRYPOINT ["docker-dev-entrypoint"]
+
+EXPOSE 3000
+CMD ["bin/dev"]

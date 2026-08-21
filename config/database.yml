@@ -19,6 +19,12 @@ default: &default
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
 
+  # Set by compose.yaml when developing in Docker. Left unset otherwise, so a native
+  # `bin/rails server` still connects over the local domain socket as before.
+  host: <%= ENV.fetch("DB_HOST", nil) %>
+  username: <%= ENV.fetch("DB_USERNAME", nil) %>
+  password: <%= ENV.fetch("DB_PASSWORD", nil) %>
+
 
 development:
   <<: *default

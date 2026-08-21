@@ -49,6 +49,12 @@ Rails.application.configure do
   # Highlight code that triggered database queries in logs.
   config.active_record.verbose_query_logs = true
 
+  # When running in Docker, requests arrive from the bridge network rather than
+  # loopback, which web-console would otherwise refuse to render for. Keep this to
+  # private ranges only: web-console renders a live REPL on error pages, so a wider
+  # value would hand code execution to anyone who can reach port 3000.
+  config.web_console.allowed_ips = %w[127.0.0.1 ::1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16]
+
   # Append comments with runtime information tags to SQL queries in logs.
   config.active_record.query_log_tags_enabled = true
 
