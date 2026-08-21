@@ -40,7 +40,11 @@ gem "kamal", require: false
 gem "thruster", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
-gem "image_processing", "~> 1.2"
+# image_processing 2.0 no longer depends on a backend, so ruby-vips must be declared
+# explicitly. Active Storage defaults variant_processor to :vips and eager-loads its
+# transformer at boot, so omitting it breaks startup, not just variant generation.
+gem "image_processing", "~> 2.0"
+gem "ruby-vips", "~> 2.0"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
