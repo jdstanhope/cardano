@@ -89,13 +89,8 @@ worth its own issue.
   test run to manufacture green.
 - If a check genuinely cannot pass, stop and say why. Do not open the PR.
 
-### 5. Draft the PR, then stop
 
-Write the PR title, body, and risk analysis and **wait for explicit approval before
-anything reaches GitHub**. Creating the issue, branching, committing, and running the
-gate are autonomous. Pushing and opening the PR are not.
-
-### 6. Push and open the PR
+### 5. Push and open the PR
 
 ```sh
 git push -u origin HEAD
@@ -103,7 +98,30 @@ gh pr create --title "<title>" --body "<body>"
 ```
 
 The body must contain `Closes #<issue-number>` so the issue closes on merge, and must
-include the risk analysis below.
+include the risk analysis below. Do not stop for approval first — the pull request is
+where the change gets reviewed, next to the diff.
+
+### 6. Confirm the checks pass
+
+```sh
+gh pr checks <number> --watch
+```
+
+A green local gate does not guarantee green checks; the two are separate definitions and
+can drift. Report the result. If the checks fail, fix them rather than handing over a red
+pull request.
+
+## Autonomy
+
+Everything through to an open, green pull request runs without asking: the issue, the
+branch, the work, the gate, the push, and the pull request itself.
+
+**Merging is manual.** That is the review point, and it stays with the person whose
+repository it is.
+
+Two things still stop the work rather than proceeding: a gate that cannot be made to
+pass, and a design question whose answer would change what gets built. Neither is a
+request for permission — they are cases where continuing would mean guessing.
 
 ## Merging
 
