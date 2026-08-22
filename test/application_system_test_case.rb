@@ -33,4 +33,18 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     # GitHub Actions provides its own Chrome, and so does a native checkout.
     driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ]
   end
+
+  # SessionTestHelper#sign_in_as sets a cookie directly, which only integration tests
+  # can do. A system test has to go through the form like anyone else.
+  def sign_in_through_the_form(user, password: "password")
+    visit new_session_path
+
+    within "form" do
+      fill_in "Email address", with: user.email_address
+      fill_in "Password", with: password
+      click_on "Sign in"
+    end
+
+    assert_current_path games_path
+  end
 end

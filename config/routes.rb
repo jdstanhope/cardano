@@ -5,6 +5,10 @@ Rails.application.routes.draw do
   # The list of games is the dashboard; there is no separate dashboard concept.
   resources :games, only: %i[ index new create show edit update ] do
     resources :symbols, only: %i[ create destroy ], controller: "game_symbols"
+
+    resources :variations, only: %i[ show ] do
+      resource :reel_strips, only: %i[ update ]
+    end
   end
   resources :passwords, param: :token
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

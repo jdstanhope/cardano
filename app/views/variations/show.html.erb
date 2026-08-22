@@ -1,0 +1,68 @@
+<% content_for :title, "#{@game.name} #{@variation.label} — Cardano" %>
+
+<div class="mx-auto max-w-3xl px-6 py-12 sm:py-16">
+  <div class="border-b border-rule pb-6">
+    <%= link_to @game.name, @game, class: "font-mono text-xs uppercase tracking-[0.18em] text-slate hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+    <h1 class="mt-2 text-3xl font-semibold tracking-tight">
+      Variation <span class="font-mono"><%= @variation.label %></span>
+    </h1>
+    <p class="mt-2 font-mono text-xs text-slate">
+      <%= @game.reel_count %>&times;<%= @game.row_count %> window
+      <% if @variation.target_rtp_min %>
+        &middot; target <%= @variation.target_rtp_min_percentage %>&ndash;<%= @variation.target_rtp_max_percentage %>
+      <% end %>
+    </p>
+  </div>
+
+  <section class="py-10">
+    <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Reel strips</h2>
+
+    <p class="mt-3 max-w-xl text-sm leading-relaxed text-slate">
+      One code per stop, separated by spaces, commas, or new lines. The number of codes
+      is the number of stops. <strong class="font-medium text-ink">Order matters</strong> —
+      a spin shows several consecutive stops, so <span class="font-mono">A A K</span> and
+      <span class="font-mono">A K A</span> are different reels.
+    </p>
+
+    <% if @game.symbols.any? %>
+      <p class="mt-3 font-mono text-xs text-slate">
+        Symbols: <%= @game.symbols.order(:position).map(&:code).join("  ") %>
+      </p>
+
+      <%= form_with url: game_variation_reel_strips_path(@game, @variation), method: :patch, class: "mt-8 space-y-8" do |form| %>
+        <% (1..@game.reel_count).each do |position| %>
+          <div data-controller="reel-count">
+            <div class="flex items-baseline justify-between gap-4">
+              <label for="reel_<%= position %>" class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">
+                Reel <%= position %>
+              </label>
+              <span data-reel-count-target="stops" class="font-mono text-xs text-slate"></span>
+            </div>
+
+            <textarea id="reel_<%= position %>"
+                      name="reels[<%= position %>]"
+                      rows="3"
+                      spellcheck="false"
+                      data-reel-count-target="input"
+                      data-action="input->reel-count#recount"
+                      class="mt-2 block w-full border <%= @form.error_for(position) ? "border-alert" : "border-rule" %> bg-white px-3 py-2.5 font-mono text-sm leading-relaxed text-ink focus:border-ink focus:outline-none"><%= @form.text_for(position) %></textarea>
+
+            <% if message = @form.error_for(position) %>
+              <p data-reel-error="<%= position %>" class="mt-1.5 text-sm text-alert"><%= message %></p>
+            <% end %>
+
+            <p data-reel-count-target="counts" class="mt-1.5 font-mono text-xs text-slate"></p>
+          </div>
+        <% end %>
+
+        <%= form.submit "Save reels",
+              class: "cursor-pointer bg-ink px-5 py-3 font-mono text-xs font-medium uppercase tracking-[0.18em] text-paper hover:bg-ink/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+      <% end %>
+    <% else %>
+      <p class="mt-4 text-sm text-slate">
+        This game has no symbols yet.
+        <%= link_to "Add some first", @game, class: "text-ink underline underline-offset-4 hover:no-underline" %>.
+      </p>
+    <% end %>
+  </section>
+</div>
