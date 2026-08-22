@@ -25,7 +25,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to root_url
+    assert_redirected_to games_url, "a new account should land where it can make a game"
     assert_equal "designer@example.com", User.last.email_address
 
     follow_redirect!

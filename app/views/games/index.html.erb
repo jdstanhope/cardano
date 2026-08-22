@@ -1,0 +1,42 @@
+<% content_for :title, "Games — Cardano" %>
+
+<div class="mx-auto max-w-5xl px-6 py-12 sm:py-16">
+  <div class="flex flex-wrap items-baseline justify-between gap-4 border-b border-rule pb-6">
+    <h1 class="text-3xl font-semibold tracking-tight">Games</h1>
+
+    <%= link_to "New game", new_game_path,
+          class: "border border-ink px-4 py-2 font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+  </div>
+
+  <% if @games.any? %>
+    <ul class="divide-y divide-rule">
+      <% @games.each do |game| %>
+        <li>
+          <%= link_to game, class: "group flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2 py-5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" do %>
+            <div>
+              <span class="text-lg font-medium text-ink group-hover:underline group-hover:underline-offset-4"><%= game.name %></span>
+              <span class="ml-3 font-mono text-xs text-slate"><%= game.reel_count %>&times;<%= game.row_count %></span>
+            </div>
+
+            <dl class="flex gap-6 font-mono text-xs text-slate">
+              <div><dt class="inline uppercase tracking-[0.14em]">Symbols</dt> <dd class="inline text-ink"><%= game.symbols.size %></dd></div>
+              <div><dt class="inline uppercase tracking-[0.14em]">Paylines</dt> <dd class="inline text-ink"><%= game.paylines.size %></dd></div>
+              <div><dt class="inline uppercase tracking-[0.14em]">Variations</dt> <dd class="inline text-ink"><%= game.variations.size %></dd></div>
+            </dl>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <%# Every account starts here, so this is an invitation rather than a notice. %>
+    <div class="py-16 text-center">
+      <p class="text-lg text-ink">Describe your first game.</p>
+      <p class="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate">
+        A game is its symbols, its reel window, and its paylines. Its variations carry the
+        reel strips and paytable that move the maths.
+      </p>
+      <%= link_to "New game", new_game_path,
+            class: "mt-8 inline-block bg-ink px-5 py-3 font-mono text-xs font-medium uppercase tracking-[0.18em] text-paper hover:bg-ink/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+    </div>
+  <% end %>
+</div>
