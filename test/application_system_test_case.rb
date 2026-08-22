@@ -2,6 +2,13 @@ require "test_helper"
 require "socket"
 
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
+  # Capybara waits 2 seconds by default. That is enough locally and not always enough
+  # on a cold CI runner, where the first Turbo form submission has to warm up: a run
+  # failed there while passing here, and passed on re-run without any change. Waiting
+  # longer does not prove a race is gone, it just stops a slow machine reading as a
+  # failure — assertions still return as soon as the page settles.
+  Capybara.default_max_wait_time = 5
+
   if ENV["SELENIUM_REMOTE_URL"].present?
     # The browser runs in its own container, so it cannot reach the test server on
     # localhost. Bind to every interface and hand the browser this container's
