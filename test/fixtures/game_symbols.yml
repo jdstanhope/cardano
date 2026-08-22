@@ -1,0 +1,11 @@
+ace:
+  game: five_by_three
+  code: A
+  name: Ace
+  position: 1
+
+king:
+  game: five_by_three
+  code: K
+  name: King
+  position: 2
