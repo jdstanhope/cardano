@@ -22,3 +22,18 @@ foreign_ace:
   code: A
   name: Ace
   position: 1
+
+# Used by nothing at all, so removal is allowed.
+jack:
+  game: five_by_three
+  code: J
+  name: Jack
+  position: 4
+
+# Paid for by the paytable but never landing on a strip, which isolates that half
+# of the removal guard.
+ten:
+  game: five_by_three
+  code: T
+  name: Ten
+  position: 5

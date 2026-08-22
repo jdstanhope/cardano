@@ -1,0 +1,39 @@
+<% content_for :title, "Edit #{@game.name} — Cardano" %>
+
+<div class="mx-auto max-w-sm px-6 py-12 sm:py-16">
+  <%= link_to @game.name, @game, class: "font-mono text-xs uppercase tracking-[0.18em] text-slate hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+  <h1 class="mt-2 text-3xl font-semibold tracking-tight">Edit game</h1>
+
+  <%= form_with model: @game, class: "mt-10 space-y-6" do |form| %>
+    <%= render "shared/form_errors", record: @game %>
+
+    <div>
+      <%= form.label :name, class: "block font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink" %>
+      <%= form.text_field :name, required: true,
+            class: "mt-2 block w-full border border-rule bg-white px-3 py-2.5 text-ink focus:border-ink focus:outline-none" %>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <%= form.label :reel_count, "Reels", class: "block font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink" %>
+        <%= form.number_field :reel_count, required: true, min: 1,
+              class: "mt-2 block w-full border border-rule bg-white px-3 py-2.5 text-ink focus:border-ink focus:outline-none" %>
+      </div>
+
+      <div>
+        <%= form.label :row_count, "Rows", class: "block font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink" %>
+        <%= form.number_field :row_count, required: true, min: 1,
+              class: "mt-2 block w-full border border-rule bg-white px-3 py-2.5 text-ink focus:border-ink focus:outline-none" %>
+      </div>
+    </div>
+
+    <p class="font-mono text-xs leading-relaxed text-slate">
+      Changing the window moves the rows: <%= @game.row_indices.join(", ") %> at
+      <%= @game.row_count %> rows. Paylines already drawn outside a smaller window will
+      stop it saving.
+    </p>
+
+    <%= form.submit "Save changes",
+          class: "w-full cursor-pointer bg-ink px-4 py-3 font-mono text-xs font-medium uppercase tracking-[0.18em] text-paper hover:bg-ink/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+  <% end %>
+</div>

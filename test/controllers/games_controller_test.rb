@@ -71,6 +71,32 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "a game can be renamed and resized" do
+    patch game_url(@game), params: { game: { name: "Renamed", reel_count: 5, row_count: 4 } }
+
+    assert_redirected_to game_url(@game)
+    assert_equal [ "Renamed", 4 ], @game.reload.then { |g| [ g.name, g.row_count ] }
+  end
+
+  test "reports why a game could not be changed" do
+    patch game_url(@game), params: { game: { name: "" } }
+
+    assert_response :unprocessable_entity
+    assert_select "[data-form-errors]"
+    assert_equal games(:five_by_three).name, @game.reload.name
+  end
+
+  test "another person's game cannot be edited or changed" do
+    someone_elses = games(:other_game)
+
+    get edit_game_url(someone_elses)
+    assert_response :not_found
+
+    patch game_url(someone_elses), params: { game: { name: "Hijacked" } }
+    assert_response :not_found
+    assert_not_equal "Hijacked", someone_elses.reload.name
+  end
+
   test "the empty state invites making a first game" do
     @game.user.games.destroy_all
 

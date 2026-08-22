@@ -9,3 +9,9 @@ ace_four:
   game_symbol: ace
   count: 4
   payout: 25
+
+ten_three:
+  variation: ninety_six
+  game_symbol: ten
+  count: 3
+  payout: 2
