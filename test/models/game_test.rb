@@ -68,6 +68,21 @@ class GameTest < ActiveSupport::TestCase
     assert_includes users(:one).games, games(:five_by_three)
   end
 
+  test "a new game arrives with variation 01" do
+    game = users(:one).games.create!(name: "Fresh", reel_count: 5, row_count: 3)
+
+    assert_equal [ 1 ], game.variations.map(&:number)
+    assert_equal "01", game.variations.first.label
+  end
+
+  test "the default variation is only created for a new game" do
+    game = users(:one).games.create!(name: "Fresh", reel_count: 5, row_count: 3)
+
+    assert_no_difference -> { game.variations.count } do
+      game.update!(name: "Renamed")
+    end
+  end
+
   test "destroying a game takes everything beneath it, in an order Postgres accepts" do
     game = games(:five_by_three)
     assert game.symbols.any? && game.paylines.any? && game.variations.any?

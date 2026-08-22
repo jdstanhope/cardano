@@ -4,7 +4,12 @@ class Variation < ApplicationRecord
   has_many :reel_strips, -> { order(:position) }, dependent: :destroy
   has_many :paytable_entries, dependent: :destroy
 
-  validates :name, presence: true, uniqueness: { scope: :game_id }
+  # Two digits, padded below ten: 01, 02, 99. Stored as an integer and padded for
+  # display, so "1" and "01" cannot be different values for the same variation and
+  # ordering is numeric rather than alphabetical.
+  validates :number, presence: true,
+                     uniqueness: { scope: :game_id },
+                     numericality: { only_integer: true, in: 1..99 }
 
   # Basis points: 9600 is 96.00%. Stored as integers because the point of evaluating
   # every outcome is to produce exact figures, and a float target would undercut that.
@@ -14,6 +19,8 @@ class Variation < ApplicationRecord
 
   validate :target_band_is_given_as_a_pair
   validate :target_band_is_not_inverted
+
+  def label = format("%02d", number.to_i)
 
   def target_rtp_min_percentage = percentage(target_rtp_min)
   def target_rtp_max_percentage = percentage(target_rtp_max)
