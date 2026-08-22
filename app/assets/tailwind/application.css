@@ -10,6 +10,7 @@
   --color-slate: #5b6472;
   --color-rule: #dde1e7;
   --color-signal: #c2670c;
+  --color-alert: #a3282f;
 
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;

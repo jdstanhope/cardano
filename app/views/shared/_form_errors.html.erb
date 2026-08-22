@@ -1,0 +1,9 @@
+<% if record.errors.any? %>
+  <div data-form-errors role="alert" class="border-l-2 border-alert bg-alert/5 px-4 py-3">
+    <ul class="space-y-1 text-sm leading-relaxed text-ink">
+      <% record.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>

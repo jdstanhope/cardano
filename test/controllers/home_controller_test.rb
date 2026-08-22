@@ -21,13 +21,27 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "reserves a header slot for auth actions without linking to pages that do not exist" do
+  test "is reachable without signing in" do
     get root_url
 
-    assert_select "[data-account-actions]", 1,
-      "the header should reserve a slot for sign in and register"
-    assert_select "[data-account-actions] a", 0,
-      "the reserved slot must stay empty until those pages exist"
+    assert_response :success
+  end
+
+  test "offers sign in and register to a signed-out visitor" do
+    get root_url
+
+    assert_select "[data-account-actions] a[href=?]", new_session_path
+    assert_select "[data-account-actions] a[href=?]", new_registration_path
+  end
+
+  test "offers sign out to a signed-in visitor, and not sign in" do
+    sign_in_as users(:one)
+
+    get root_url
+
+    assert_select "[data-account-actions] a[href=?]", session_path
+    assert_select "[data-account-actions] a[href=?]", new_session_path, 0,
+      "someone already signed in should not be offered sign in"
   end
 
   test "shows the reel window with its winning combination" do
