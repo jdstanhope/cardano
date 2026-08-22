@@ -1,6 +1,9 @@
 Rails.application.routes.draw do
   resource :session
   resource :registration, only: %i[ new create ]
+
+  # The list of games is the dashboard; there is no separate dashboard concept.
+  resources :games, only: %i[ index new create show ]
   resources :passwords, param: :token
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

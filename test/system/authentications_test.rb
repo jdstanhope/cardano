@@ -15,7 +15,7 @@ class AuthenticationsTest < ApplicationSystemTestCase
       click_on "Sign in"
     end
 
-    assert_current_path root_path
+    assert_current_path games_path
     assert_link "Sign out"
 
     # Sign out is a link carrying data-turbo-method, so this only works if Turbo is
@@ -38,7 +38,7 @@ class AuthenticationsTest < ApplicationSystemTestCase
       click_on "Create account"
     end
 
-    assert_current_path root_path
+    assert_current_path games_path
     assert_text "Your account is ready"
     assert_link "Sign out"
   end

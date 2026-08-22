@@ -1,0 +1,87 @@
+<% content_for :title, "#{@game.name} — Cardano" %>
+
+<div class="mx-auto max-w-5xl px-6 py-12 sm:py-16">
+  <div class="border-b border-rule pb-6">
+    <%= link_to "Games", games_path, class: "font-mono text-xs uppercase tracking-[0.18em] text-slate hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+    <h1 class="mt-2 text-3xl font-semibold tracking-tight"><%= @game.name %></h1>
+    <p class="mt-2 font-mono text-xs text-slate">
+      <%= @game.reel_count %>&times;<%= @game.row_count %> window &middot;
+      rows <%= @game.row_indices.join(", ") %>
+    </p>
+  </div>
+
+  <div class="grid gap-12 py-10 lg:grid-cols-2">
+    <section data-symbols>
+      <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Symbols</h2>
+
+      <% if @game.symbols.any? %>
+        <ul class="mt-4 divide-y divide-rule border-y border-rule">
+          <% @game.symbols.order(:position).each do |symbol| %>
+            <li class="flex items-baseline gap-4 py-2.5">
+              <span class="w-8 font-mono text-lg text-ink"><%= symbol.code %></span>
+              <span class="text-sm text-slate"><%= symbol.display_name %></span>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="mt-4 text-sm text-slate">No symbols yet.</p>
+      <% end %>
+    </section>
+
+    <section data-paylines>
+      <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Paylines</h2>
+
+      <% if @game.paylines.any? %>
+        <ul class="mt-4 space-y-3">
+          <% @game.paylines.order(:position).each do |payline| %>
+            <%# Drawn rather than listed: a payline should look like the shape it
+                describes. offset_from_top converts a centred row index to a row
+                from the top, which is how the grid is laid out. %>
+            <li data-payline class="flex items-center gap-4">
+              <span class="w-6 font-mono text-xs text-slate"><%= payline.position %></span>
+
+              <div class="grid gap-px bg-rule p-px" style="grid-template-columns: repeat(<%= @game.reel_count %>, 1rem);">
+                <% @game.row_indices.each do |row| %>
+                  <% payline.rows.each do |payline_row| %>
+                    <% on_line = payline_row == row %>
+                    <span class="h-4 w-4 <%= on_line ? "bg-signal" : "bg-paper" %>"></span>
+                  <% end %>
+                <% end %>
+              </div>
+
+              <span class="font-mono text-xs text-slate"><%= payline.rows.join(", ") %></span>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="mt-4 text-sm text-slate">No paylines yet.</p>
+      <% end %>
+    </section>
+  </div>
+
+  <section data-variations class="border-t border-rule pt-10">
+    <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Variations</h2>
+
+    <% if @game.variations.any? %>
+      <ul class="mt-4 divide-y divide-rule border-y border-rule">
+        <% @game.variations.order(:name).each do |variation| %>
+          <li class="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1 py-3">
+            <span class="text-ink"><%= variation.name %></span>
+
+            <span class="font-mono text-xs text-slate">
+              <% if variation.target_rtp_min %>
+                target <%= variation.target_rtp_min_percentage %>&ndash;<%= variation.target_rtp_max_percentage %>
+              <% else %>
+                no target
+              <% end %>
+              &middot; <%= variation.reel_strips.size %>/<%= @game.reel_count %> strips
+              &middot; <%= variation.paytable_entries.size %> paytable entries
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="mt-4 text-sm text-slate">No variations yet.</p>
+    <% end %>
+  </section>
+</div>

@@ -68,6 +68,19 @@ class GameTest < ActiveSupport::TestCase
     assert_includes users(:one).games, games(:five_by_three)
   end
 
+  test "destroying a game takes everything beneath it, in an order Postgres accepts" do
+    game = games(:five_by_three)
+    assert game.symbols.any? && game.paylines.any? && game.variations.any?
+    assert PaytableEntry.where(variation: game.variations).any?,
+      "the cascade is only interesting when a paytable entry references a symbol"
+
+    assert_nothing_raised { game.destroy! }
+
+    assert_empty GameSymbol.where(game_id: game.id)
+    assert_empty Payline.where(game_id: game.id)
+    assert_empty Variation.where(game_id: game.id)
+  end
+
   test "owns its symbols, paylines, and variations" do
     game = games(:five_by_three)
 

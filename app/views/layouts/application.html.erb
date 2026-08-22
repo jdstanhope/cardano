@@ -32,6 +32,8 @@
 
         <nav data-account-actions aria-label="Account" class="flex items-center gap-5 font-mono text-xs font-medium uppercase tracking-[0.18em]">
           <% if authenticated? %>
+            <%= link_to "Games", games_path,
+                  class: "text-slate hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink" %>
             <%= link_to "Sign out", session_path, data: { turbo_method: :delete },
                   class: "text-slate hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink" %>
           <% else %>
