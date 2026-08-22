@@ -3,7 +3,9 @@ Rails.application.routes.draw do
   resource :registration, only: %i[ new create ]
 
   # The list of games is the dashboard; there is no separate dashboard concept.
-  resources :games, only: %i[ index new create show ]
+  resources :games, only: %i[ index new create show edit update ] do
+    resources :symbols, only: %i[ create destroy ], controller: "game_symbols"
+  end
   resources :passwords, param: :token
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

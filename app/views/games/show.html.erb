@@ -3,7 +3,11 @@
 <div class="mx-auto max-w-5xl px-6 py-12 sm:py-16">
   <div class="border-b border-rule pb-6">
     <%= link_to "Games", games_path, class: "font-mono text-xs uppercase tracking-[0.18em] text-slate hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
-    <h1 class="mt-2 text-3xl font-semibold tracking-tight"><%= @game.name %></h1>
+    <div class="mt-2 flex flex-wrap items-baseline justify-between gap-4">
+      <h1 class="text-3xl font-semibold tracking-tight"><%= @game.name %></h1>
+      <%= link_to "Edit", edit_game_path(@game),
+            class: "border border-rule px-3 py-1.5 font-mono text-xs font-medium uppercase tracking-[0.18em] text-slate hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+    </div>
     <p class="mt-2 font-mono text-xs text-slate">
       <%= @game.reel_count %>&times;<%= @game.row_count %> window &middot;
       rows <%= @game.row_indices.join(", ") %>
@@ -19,12 +23,37 @@
           <% @game.symbols.order(:position).each do |symbol| %>
             <li class="flex items-baseline gap-4 py-2.5">
               <span class="w-8 font-mono text-lg text-ink"><%= symbol.code %></span>
-              <span class="text-sm text-slate"><%= symbol.display_name %></span>
+              <span class="flex-1 text-sm text-slate"><%= symbol.display_name %></span>
+
+              <%= button_to "Remove", game_symbol_path(@game, symbol), method: :delete,
+                    form: { data: { turbo_confirm: "Remove #{symbol.display_name}?" } },
+                    class: "cursor-pointer font-mono text-xs uppercase tracking-[0.14em] text-slate hover:text-alert focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
             </li>
           <% end %>
         </ul>
       <% else %>
-        <p class="mt-4 text-sm text-slate">No symbols yet.</p>
+        <p class="mt-4 text-sm text-slate">No symbols yet. Add the first below.</p>
+      <% end %>
+
+      <%= form_with model: [ @game, @symbol || @game.symbols.new ], url: game_symbols_path(@game), class: "mt-6 space-y-3" do |form| %>
+        <%= render "shared/form_errors", record: (@symbol || @game.symbols.new) %>
+
+        <div class="flex gap-3">
+          <div class="w-20">
+            <%= form.label :code, class: "block font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink" %>
+            <%= form.text_field :code, required: true, maxlength: 4,
+                  class: "mt-2 block w-full border border-rule bg-white px-3 py-2 font-mono text-ink focus:border-ink focus:outline-none" %>
+          </div>
+
+          <div class="flex-1">
+            <%= form.label :name, "Name (optional)", class: "block font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink" %>
+            <%= form.text_field :name,
+                  class: "mt-2 block w-full border border-rule bg-white px-3 py-2 text-ink focus:border-ink focus:outline-none" %>
+          </div>
+        </div>
+
+        <%= form.submit "Add symbol",
+              class: "cursor-pointer border border-ink px-4 py-2 font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
       <% end %>
     </section>
 

@@ -21,12 +21,31 @@ class GamesController < ApplicationController
   end
 
   def show
-    @game = games.find(params[:id])
+    @game = game
+    @symbol = @game.symbols.new
+  end
+
+  def edit
+    @game = game
+  end
+
+  def update
+    @game = game
+
+    if @game.update(game_params)
+      redirect_to @game, notice: "#{@game.name} updated."
+    else
+      render :edit, status: :unprocessable_entity
+    end
   end
 
   private
     def games
       Current.user.games
+    end
+
+    def game
+      games.find(params[:id])
     end
 
     def game_params
