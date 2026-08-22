@@ -25,7 +25,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: bin/dev
+    command: bin/rails server
     environment:
       DB_HOST: postgres
       DB_USERNAME: cardano
@@ -45,6 +45,32 @@ services:
     # Keeps `debugger` / `binding.irb` usable via `docker compose attach app`.
     stdin_open: true
     tty: true
+
+  # The Tailwind watcher runs as its own service rather than beside Puma under
+  # foreman, which tears down the whole formation when any one process exits. A
+  # git checkout rewrites files under the bind mount, the watcher notices and
+  # exits, and that used to stop the web server too. Isolated here it can restart
+  # on its own without touching Puma. Auto-restart is safe for a stateless
+  # watcher; it is deliberately not set on `app`, where it would mask a crash loop.
+  css:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    # `always` passes --watch=always to the Tailwind CLI. Without it the watcher exits
+    # as soon as stdin closes, which it does when nothing holds a TTY open. Under
+    # foreman that never showed, because foreman supplied one.
+    command: [ "bin/rails", "tailwindcss:watch[always]" ]
+    environment:
+      DB_HOST: postgres
+      DB_USERNAME: cardano
+      DB_PASSWORD: password
+    volumes:
+      - .:/rails
+      - bundle:/usr/local/bundle
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   postgres-data:

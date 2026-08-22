@@ -11,13 +11,11 @@ fi
 # An unclean shutdown can leave a stale pidfile that stops Puma from booting.
 rm -f tmp/pids/server.pid
 
-# Only the long-running server needs the database ready; one-off commands shouldn't
-# pay for a migration check on every invocation.
-case "$1" in
-  bin/dev | ./bin/dev)
-    echo "==> Preparing database..."
-    bundle exec rails db:prepare
-    ;;
-esac
+# Only the web server needs the database ready. One-off commands shouldn't pay for a
+# migration check on every invocation, and the css watcher never touches the database.
+if [ "$1" = "bin/rails" ] && [ "$2" = "server" ]; then
+  echo "==> Preparing database..."
+  bundle exec rails db:prepare
+fi
 
 exec "$@"
