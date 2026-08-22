@@ -74,6 +74,22 @@ docker compose attach app     # detach again with ctrl-p ctrl-q
 
 Error pages also give you an interactive `web-console` session in the browser.
 
+### Running system tests
+
+System tests drive a real browser, which runs in the `selenium` service rather than
+being installed on your machine:
+
+```sh
+docker compose exec app bin/rails test:system
+```
+
+To watch a run as it happens, open <http://localhost:7900> and enter the password
+`secret`. The browser is deliberately not headless so this works.
+
+`bin/ci` does **not** run system tests. It stays a few seconds and needs no browser,
+and GitHub Actions runs the system tests on every pull request, so nothing is skipped
+— it is only the local gate that stays fast.
+
 ### Managing the stack
 
 ```sh
@@ -129,19 +145,13 @@ REPL on error pages, which is code execution for anyone who can load one.
 
 | File                      | Purpose                                                     |
 | ------------------------- | ----------------------------------------------------------- |
-| `compose.yaml`            | The `app`, `css`, and `postgres` services, volumes, and health check |
+| `compose.yaml`            | The `app`, `css`, `postgres`, and `selenium` services, volumes, and health check |
 | `Dockerfile.dev`          | The development image (`Dockerfile` is for production)       |
 | `bin/docker-dev-entrypoint` | Syncs gems and prepares the database before booting        |
 
 Caching, Action Cable, and Active Job all run in-process in development
 (`memory_store` and the `async` adapters), so no Redis or worker container is
 needed. Production uses Solid Cache, Solid Cable, and Solid Queue instead.
-
-**System tests** are not covered by this setup — `selenium-webdriver` needs a
-browser that the app container doesn't include. They are commented out in
-`config/ci.rb` and `test/system` is empty, so nothing is broken today; adding a
-`selenium/standalone-chromium` service to `compose.yaml` is the fix when the
-first system test lands.
 
 ## Developing without Docker
 

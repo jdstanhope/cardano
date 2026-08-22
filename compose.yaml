@@ -30,6 +30,9 @@ services:
       DB_HOST: postgres
       DB_USERNAME: cardano
       DB_PASSWORD: password
+      # Tells ApplicationSystemTestCase to drive the browser in the selenium service.
+      # Unset elsewhere, so GitHub Actions keeps using its own local Chrome.
+      SELENIUM_REMOTE_URL: http://selenium:4444
     ports:
       # Loopback-only: development exposes web-console, an interactive REPL on error
       # pages, which must never be reachable from the local network.
@@ -71,6 +74,16 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+
+  # A real browser for system tests. The app container has none, so `bin/rails
+  # test:system` could not run locally at all before this.
+  selenium:
+    image: selenium/standalone-chromium:latest
+    # Chromium crashes on the default 64MB of shared memory.
+    shm_size: 2gb
+    ports:
+      # noVNC, for watching a test run: http://localhost:7900 (password "secret").
+      - "127.0.0.1:7900:7900"
 
 volumes:
   postgres-data:
