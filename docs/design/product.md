@@ -110,10 +110,12 @@ variation and follow separately.
 
 ```
 User
- └── Game            name, reel_count, row_count
-      ├── GameSymbol code, name, position
-      ├── Payline    position, rows[]
-      └── Variation  name, target_rtp_min, target_rtp_max
+ └── Game               name, reel_count, row_count
+      ├── GameSymbol    code, name, position
+      ├── Payline       position, rows[]
+      └── Variation     name, target_rtp_min, target_rtp_max
+           ├── ReelStrip     position, symbols[]
+           └── PaytableEntry game_symbol, count, payout
 ```
 
 The reel window is two integers on the game rather than a table of its own, because
@@ -148,6 +150,27 @@ while the domain counts from the centre.
 A payline is validated against its game: one row per reel, and every row inside the
 window. A payline that does not fit its window is the most likely route to silently
 wrong figures later.
+
+### Reel strips and the paytable
+
+A variation holds one `ReelStrip` per reel and a set of `PaytableEntry` rows. These are
+the two levers on the maths: the strips are the primary one, the paytable the secondary.
+
+**Reels may differ in length.** A five-reel game whose reels carry 32, 34, 32, 30, and
+32 stops is ordinary design and a real lever, so nothing requires strips to match one
+another. The outcome space is the product of the stop counts, not a power of one of them.
+
+A strip stores its stops as symbol **codes**, and a paytable entry references a symbol by
+**foreign key**. That inconsistency is forced rather than chosen: a Postgres array cannot
+carry a foreign key, so the array validates in the model regardless — and given that,
+codes buy readability and straightforward import, because strips arrive as columns of
+codes rather than ids. A single-column reference can have a real foreign key, so it does.
+
+Two rules stop a paytable describing something impossible. A `count` cannot exceed the
+game's `reel_count`, and a `game_symbol` must belong to the same game as the variation.
+Both records reach a game independently, and an entry pairing a variation with another
+game's symbol describes a combination that can never land — it would skew the figures
+quietly rather than raise.
 
 ### Exactness
 

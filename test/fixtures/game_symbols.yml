@@ -9,3 +9,16 @@ king:
   code: K
   name: King
   position: 2
+
+queen:
+  game: five_by_three
+  code: Q
+  name: Queen
+  position: 3
+
+# Belongs to a different game entirely.
+foreign_ace:
+  game: other_game
+  code: A
+  name: Ace
+  position: 1
