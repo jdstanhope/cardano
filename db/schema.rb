@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_025713) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_030948) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -46,6 +46,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_025713) do
     t.index ["game_id"], name: "index_paylines_on_game_id"
   end
 
+  create_table "paytable_entries", force: :cascade do |t|
+    t.integer "count", null: false
+    t.datetime "created_at", null: false
+    t.bigint "game_symbol_id", null: false
+    t.integer "payout", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "variation_id", null: false
+    t.index ["game_symbol_id"], name: "index_paytable_entries_on_game_symbol_id"
+    t.index ["variation_id", "game_symbol_id", "count"], name: "index_paytable_entries_on_variation_symbol_count", unique: true
+    t.index ["variation_id"], name: "index_paytable_entries_on_variation_id"
+  end
+
+  create_table "reel_strips", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "position", null: false
+    t.string "symbols", default: [], null: false, array: true
+    t.datetime "updated_at", null: false
+    t.bigint "variation_id", null: false
+    t.index ["variation_id", "position"], name: "index_reel_strips_on_variation_id_and_position", unique: true
+    t.index ["variation_id"], name: "index_reel_strips_on_variation_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -77,6 +99,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_025713) do
   add_foreign_key "game_symbols", "games"
   add_foreign_key "games", "users"
   add_foreign_key "paylines", "games"
+  add_foreign_key "paytable_entries", "game_symbols"
+  add_foreign_key "paytable_entries", "variations"
+  add_foreign_key "reel_strips", "variations"
   add_foreign_key "sessions", "users"
   add_foreign_key "variations", "games"
 end

@@ -1,0 +1,10 @@
+# Reels may differ in length; that is normal design and a real RTP lever.
+reel_one:
+  variation: ninety_six
+  position: 1
+  symbols: [ A, K, Q, K, Q, Q ]
+
+reel_two:
+  variation: ninety_six
+  position: 2
+  symbols: [ K, Q, Q, A ]

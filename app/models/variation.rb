@@ -1,6 +1,9 @@
 class Variation < ApplicationRecord
   belongs_to :game
 
+  has_many :reel_strips, -> { order(:position) }, dependent: :destroy
+  has_many :paytable_entries, dependent: :destroy
+
   validates :name, presence: true, uniqueness: { scope: :game_id }
 
   # Basis points: 9600 is 96.00%. Stored as integers because the point of evaluating

@@ -62,6 +62,12 @@ class GameTest < ActiveSupport::TestCase
     assert_equal 2, game.offset_from_top(-1)
   end
 
+  test "is reachable from the person who owns it" do
+    # current_user.games is the intended entry point for every controller, so the
+    # association has to exist before one is written.
+    assert_includes users(:one).games, games(:five_by_three)
+  end
+
   test "owns its symbols, paylines, and variations" do
     game = games(:five_by_three)
 

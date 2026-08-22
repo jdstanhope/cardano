@@ -11,3 +11,10 @@ five_by_four:
   name: Four Rows
   reel_count: 5
   row_count: 4
+
+# A separate game, used to prove that references cannot cross a game boundary.
+other_game:
+  user: two
+  name: Somebody Else's Game
+  reel_count: 5
+  row_count: 3
