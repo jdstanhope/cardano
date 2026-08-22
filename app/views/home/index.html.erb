@@ -1,0 +1,83 @@
+<% content_for :title, "Cardano — slot game maths" %>
+
+<div class="mx-auto max-w-5xl px-6 py-16 sm:py-24">
+  <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:gap-x-20 lg:gap-y-14">
+
+    <div class="max-w-xl lg:col-start-1 lg:row-start-1">
+      <h1 class="text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">
+        Design the maths before you build the game.
+      </h1>
+
+      <p class="mt-6 text-lg leading-relaxed text-slate">
+        Cardano evaluates every outcome a slot game can produce, so you can see what
+        moving one symbol on one reel does to the return — while the design is still
+        a decision, not a build.
+      </p>
+    </div>
+
+    <%# The signature element: the exact object the tool models. A reel window, one
+        payline crossing all five reels, and the leading run of matching symbols that
+        forms the winning combination. Placed second in the DOM so it follows the pitch
+        on small screens rather than trailing the whole page. %>
+    <figure data-reel-window class="lg:col-start-2 lg:row-span-2 lg:row-start-1">
+      <div class="bg-ink p-7 sm:p-9">
+        <div class="relative grid grid-cols-5 divide-x divide-white/10 font-mono text-2xl sm:text-3xl">
+          <% [
+               [ "A", "A", "A", "K", "Q" ],
+               [ "K", "Q", "J", "A", "A" ],
+               [ "Q", "K", "K", "J", "K" ]
+             ].each_with_index do |row, row_index| %>
+            <% row.each_with_index do |symbol, reel_index| %>
+              <%
+                on_payline = row_index.zero?
+                winning = on_payline && reel_index < 3
+                classes = [ "flex h-14 items-center justify-center sm:h-16" ]
+                classes << if winning
+                  "text-signal"
+                elsif on_payline
+                  "text-paper"
+                else
+                  "text-white/25"
+                end
+              %>
+              <span class="<%= classes.join(" ") %>" <%= "data-winning" if winning %>><%= symbol %></span>
+            <% end %>
+          <% end %>
+
+          <%# The payline traces row 1 across all five reels. Only the first three pay,
+              so the marker changes weight where the winning combination ends. %>
+          <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-1/3 grid grid-cols-5">
+            <div class="col-span-3 h-px bg-signal"></div>
+            <div class="col-span-2 h-px bg-white/20"></div>
+          </div>
+        </div>
+      </div>
+
+      <figcaption class="mt-4 font-mono text-xs leading-relaxed text-slate">
+        Payline 1 of 20 · winning combination <span class="text-ink">A&times;3</span> pays 5
+        <br>
+        <span class="text-slate/80">The K and Q lie on the payline, outside the combination.</span>
+      </figcaption>
+    </figure>
+
+    <dl class="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:col-start-1 lg:row-start-2">
+      <div>
+        <dt class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">RTP</dt>
+        <dd class="mt-1.5 text-sm leading-relaxed text-slate">The share of stake returned over the long run.</dd>
+      </div>
+      <div>
+        <dt class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Hit frequency</dt>
+        <dd class="mt-1.5 text-sm leading-relaxed text-slate">How often a spin returns a win of any size.</dd>
+      </div>
+      <div>
+        <dt class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Volatility</dt>
+        <dd class="mt-1.5 text-sm leading-relaxed text-slate">Whether it pays small and often, or rarely and large.</dd>
+      </div>
+      <div>
+        <dt class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Max win</dt>
+        <dd class="mt-1.5 text-sm leading-relaxed text-slate">The largest payout a variation can produce.</dd>
+      </div>
+    </dl>
+
+  </div>
+</div>

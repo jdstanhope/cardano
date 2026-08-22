@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+/* Cardano is a measurement tool, not a casino product. The palette is cool and
+   neutral throughout, and the one warm value is spent in a single place: the
+   winning run inside the reel window. Value appearing in an otherwise neutral
+   field is the whole subject of the tool, so it is the only thing coloured. */
+@theme {
+  --color-paper: #f4f5f7;
+  --color-ink: #12151c;
+  --color-slate: #5b6472;
+  --color-rule: #dde1e7;
+  --color-signal: #c2670c;
+
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
