@@ -65,8 +65,8 @@ docker compose run --rm app bin/rails db:migrate
 
 ### Debugging
 
-`bin/dev` enables the `debug` gem. Drop a `debugger` call in your code, then
-attach to the running container to get the prompt:
+Drop a `debugger` call in your code, then attach to the running container to get
+the prompt:
 
 ```sh
 docker compose attach app     # detach again with ctrl-p ctrl-q
@@ -79,6 +79,7 @@ Error pages also give you an interactive `web-console` session in the browser.
 ```sh
 docker compose logs -f app    # tail the Rails and Tailwind output
 docker compose restart app    # after changing an initializer or the Gemfile
+docker compose restart css    # rarely needed; the watcher restarts itself
 docker compose down           # stop; database and gems are preserved
 docker compose down -v        # stop and delete the database and gem volumes
 docker compose build app      # rebuild after changing Dockerfile.dev
@@ -86,7 +87,23 @@ docker compose build app      # rebuild after changing Dockerfile.dev
 
 Gems live in a `bundle` volume rather than the image, so after editing the
 `Gemfile` a `docker compose restart app` is enough — the entrypoint notices the
-bundle is out of date and installs the difference. No rebuild required.
+bundle is out of date and installs the difference. No rebuild required. A
+generator that adds a gem is the same case: the running server booted before the
+gem existed, so restart it or the next request fails to load it.
+
+### Why the watcher is its own service
+
+Puma runs in `app` and the Tailwind watcher runs in `css`. They were originally a
+single service running `bin/dev`, which runs both under foreman — and foreman
+tears down the whole formation as soon as any one process exits. A `git checkout`
+rewrites files under the bind mount, the watcher notices and exits, and that
+stopped the web server too.
+
+Split apart, the watcher restarts itself without touching Puma. `restart:
+unless-stopped` is set on `css` only; on `app` it would mask a crash loop rather
+than surface it.
+
+`bin/dev` still exists and still works for running the app natively.
 
 ### Connecting to the database
 
@@ -112,7 +129,7 @@ REPL on error pages, which is code execution for anyone who can load one.
 
 | File                      | Purpose                                                     |
 | ------------------------- | ----------------------------------------------------------- |
-| `compose.yaml`            | The `app` and `postgres` services, volumes, and health check |
+| `compose.yaml`            | The `app`, `css`, and `postgres` services, volumes, and health check |
 | `Dockerfile.dev`          | The development image (`Dockerfile` is for production)       |
 | `bin/docker-dev-entrypoint` | Syncs gems and prepares the database before booting        |
 

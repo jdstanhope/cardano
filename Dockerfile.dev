@@ -26,9 +26,6 @@ ENV RAILS_ENV="development" \
     BUNDLE_PATH="/usr/local/bundle" \
     BINDING="0.0.0.0"
 
-# bin/dev shells out to foreman; pre-install it so it isn't fetched on every boot.
-RUN gem install foreman
-
 # Install application gems. Only the manifests are copied so this layer is reused
 # until the Gemfile actually changes.
 COPY Gemfile Gemfile.lock ./
