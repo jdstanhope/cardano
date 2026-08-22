@@ -1,0 +1,10 @@
+ninety_six:
+  game: five_by_three
+  name: "96"
+  target_rtp_min: 9600
+  target_rtp_max: 9650
+
+# Targets are optional, and absent together.
+untargeted:
+  game: five_by_three
+  name: "no target"

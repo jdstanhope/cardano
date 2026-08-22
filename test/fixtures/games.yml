@@ -1,0 +1,13 @@
+# A conventional 5x3 game. Row indices run 1, 0, -1 from top to bottom.
+five_by_three:
+  user: one
+  name: Reel Arithmetic
+  reel_count: 5
+  row_count: 3
+
+# An even window, where the zero line sits one row below the top: 1, 0, -1, -2.
+five_by_four:
+  user: one
+  name: Four Rows
+  reel_count: 5
+  row_count: 4

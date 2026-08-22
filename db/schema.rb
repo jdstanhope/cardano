@@ -10,9 +10,41 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_021230) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_025713) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "game_symbols", force: :cascade do |t|
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.bigint "game_id", null: false
+    t.string "name"
+    t.integer "position", null: false
+    t.datetime "updated_at", null: false
+    t.index ["game_id", "code"], name: "index_game_symbols_on_game_id_and_code", unique: true
+    t.index ["game_id"], name: "index_game_symbols_on_game_id"
+  end
+
+  create_table "games", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "reel_count", null: false
+    t.integer "row_count", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "name"], name: "index_games_on_user_id_and_name", unique: true
+    t.index ["user_id"], name: "index_games_on_user_id"
+  end
+
+  create_table "paylines", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "game_id", null: false
+    t.integer "position", null: false
+    t.integer "rows", default: [], null: false, array: true
+    t.datetime "updated_at", null: false
+    t.index ["game_id", "position"], name: "index_paylines_on_game_id_and_position", unique: true
+    t.index ["game_id"], name: "index_paylines_on_game_id"
+  end
 
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -31,5 +63,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_021230) do
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
+  create_table "variations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "game_id", null: false
+    t.string "name", null: false
+    t.integer "target_rtp_max"
+    t.integer "target_rtp_min"
+    t.datetime "updated_at", null: false
+    t.index ["game_id", "name"], name: "index_variations_on_game_id_and_name", unique: true
+    t.index ["game_id"], name: "index_variations_on_game_id"
+  end
+
+  add_foreign_key "game_symbols", "games"
+  add_foreign_key "games", "users"
+  add_foreign_key "paylines", "games"
   add_foreign_key "sessions", "users"
+  add_foreign_key "variations", "games"
 end

@@ -103,6 +103,59 @@ Two consequences follow:
   exists. This is a starting point, not a simplification to design around — adding the
   second variation should be configuration, not rework.
 
+## Data model
+
+The first slice covers what a **game owns**. Reel strips and the paytable belong to a
+variation and follow separately.
+
+```
+User
+ └── Game            name, reel_count, row_count
+      ├── GameSymbol code, name, position
+      ├── Payline    position, rows[]
+      └── Variation  name, target_rtp_min, target_rtp_max
+```
+
+The reel window is two integers on the game rather than a table of its own, because
+that is all it is.
+
+`GameSymbol` is deliberately not called `Symbol`. A top-level `Symbol < ApplicationRecord`
+would shadow Ruby's `::Symbol` across the whole application, and namespacing it as
+`Game::Symbol` has the same problem inside `class Game`, where a bare `Symbol` would
+resolve to the model. The association still reads `game.symbols`.
+
+### Row indexing
+
+Row indices run top to bottom, **descending, with zero at the centre**, so the centre
+line is `[0, 0, 0, 0, 0]` whatever the window height. For `n` rows the top index is
+`(n - 1) / 2` by integer division, and the bottom is `top - (n - 1)`.
+
+| Window | Indices, top to bottom |
+| ------ | ---------------------- |
+| 2 rows | `0, -1` |
+| 3 rows | `1, 0, -1` |
+| 4 rows | `1, 0, -1, -2` |
+| 5 rows | `2, 1, 0, -1, -2` |
+
+An even window therefore has one row above the centre and two below it. A V across a
+three-row window reads `[1, 0, -1, 0, 1]` — it looks like the shape it describes, which
+a top-indexed `[0, 1, 2, 1, 0]` does not.
+
+`Game#row_range` owns this rule so it is not re-derived elsewhere, and
+`Game#offset_from_top` converts an index for rendering, since views count from the top
+while the domain counts from the centre.
+
+A payline is validated against its game: one row per reel, and every row inside the
+window. A payline that does not fit its window is the most likely route to silently
+wrong figures later.
+
+### Exactness
+
+`Variation` stores its target RTP as **integer basis points** — 9600 is 96.00%. The
+reason for evaluating every outcome is to produce exact figures, so a float target
+would undercut the premise on the first column that stores a number. Payouts will be
+integers for the same reason.
+
 ## How the figures are computed
 
 Everything derives from one thing: the **outcome distribution**, a mapping from each

@@ -1,0 +1,11 @@
+# The centre line. All zeros for any window height.
+centre:
+  game: five_by_three
+  position: 1
+  rows: [ 0, 0, 0, 0, 0 ]
+
+# A V: top, middle, bottom, middle, top.
+vee:
+  game: five_by_three
+  position: 2
+  rows: [ 1, 0, -1, 0, 1 ]
