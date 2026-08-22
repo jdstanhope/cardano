@@ -68,7 +68,11 @@ and by how many of that symbol landed in a row. For example `A×3 = 5`, `A×4 = 
 **Game** — one titled slot game. The tool is built to hold many games rather than model
 one at a time.
 
-**Variation** — one complete, playable configuration of a game. Variations exist mainly
+**Variation** — one complete, playable configuration of a game, identified by a two
+digit number padded below ten: `01`, `02`, `99`. It is stored as an integer and padded
+for display, so `1` and `01` cannot become different values for the same variation and
+ordering is numeric rather than alphabetical. Every game is created with variation `01`,
+since a game with no variation cannot hold any maths at all. Variations exist mainly
 to offer the same game at **different RTP figures**, which operators and jurisdictions
 routinely require: the same title might ship at 96%, 94%, and 92%.
 
@@ -113,7 +117,7 @@ User
  └── Game               name, reel_count, row_count
       ├── GameSymbol    code, name, position
       ├── Payline       position, rows[]
-      └── Variation     name, target_rtp_min, target_rtp_max
+      └── Variation     number, target_rtp_min, target_rtp_max
            ├── ReelStrip     position, symbols[]
            └── PaytableEntry game_symbol, count, payout
 ```

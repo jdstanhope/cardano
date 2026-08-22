@@ -43,7 +43,7 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "[data-symbols]", /A/
     assert_select "[data-paylines] [data-payline]", @game.paylines.count
-    assert_select "[data-variations]", /96/
+    assert_select "[data-variations]", /#{variations(:ninety_six).label}/
   end
 
   test "creates a game and opens it" do
