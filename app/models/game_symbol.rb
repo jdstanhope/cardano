@@ -11,6 +11,13 @@ class GameSymbol < ApplicationRecord
   # reference them, and Postgres rejects it.
   has_many :paytable_entries, dependent: :destroy
 
+  # What this wild does not substitute for, and the exclusions naming it. Both are
+  # dependent, so removing either symbol takes the exclusion with it.
+  has_many :wild_exclusions, foreign_key: :wild_id, dependent: :destroy, inverse_of: :wild
+  has_many :excluded_symbols, through: :wild_exclusions, source: :excluded
+  has_many :exclusions_naming_this_symbol, class_name: "WildExclusion", foreign_key: :excluded_id,
+           dependent: :destroy, inverse_of: :excluded
+
   validates :code, presence: true, uniqueness: { scope: :game_id, case_sensitive: false }
   validates :position, presence: true, numericality: { only_integer: true }
 
@@ -36,8 +43,21 @@ class GameSymbol < ApplicationRecord
   # symbol goes, and its paytable with it, silently.
   before_destroy :refuse_while_in_use, prepend: true, unless: :destroyed_by_association
 
+  # A symbol that is not wild substitutes for nothing, so a list of what it does not
+  # substitute for means nothing either.
+  after_update :discard_exclusions_when_no_longer_wild, if: -> { saved_change_to_wild? && !wild? }
+
   def display_name
     name.presence || code
+  end
+
+  # A wild substitutes for every symbol in its game except itself and the ones it has
+  # been told to leave alone. Anything that is not wild substitutes for nothing.
+  def substitutes_for?(symbol)
+    return false unless wild?
+    return false if symbol == self
+
+    excluded_symbols.exclude?(symbol)
   end
 
   # Named Wild, so the marking is not a choice: it cannot be unmarked, and nothing
@@ -54,6 +74,10 @@ class GameSymbol < ApplicationRecord
   end
 
   private
+    def discard_exclusions_when_no_longer_wild
+      wild_exclusions.destroy_all
+    end
+
     def recognise_a_symbol_named_wild
       self.wild = true if name.to_s.strip.casecmp?("wild")
     end

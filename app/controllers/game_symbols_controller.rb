@@ -42,6 +42,6 @@ class GameSymbolsController < ApplicationController
     end
 
     def symbol_params
-      params.expect(game_symbol: [ :code, :name, :wild ])
+      params.expect(game_symbol: [ :code, :name, :wild, { excluded_symbol_ids: [] } ])
     end
 end

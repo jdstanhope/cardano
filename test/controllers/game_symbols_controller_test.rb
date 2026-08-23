@@ -122,6 +122,27 @@ class GameSymbolsControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", /is this game's wild/
   end
 
+  test "what a wild does not substitute for can be set and cleared" do
+    wild = game_symbols(:jack)
+    wild.update!(wild: true)
+
+    patch game_symbol_url(@game, wild), params: { game_symbol: { excluded_symbol_ids: [ game_symbols(:ace).id ] } }
+    assert_equal [ game_symbols(:ace) ], wild.reload.excluded_symbols.to_a
+
+    patch game_symbol_url(@game, wild), params: { game_symbol: { excluded_symbol_ids: [ "" ] } }
+    assert_empty wild.reload.excluded_symbols
+  end
+
+  test "the substitution form appears only once a wild exists" do
+    get game_url(@game)
+    assert_select "body", { text: /does not substitute for/, count: 0 }
+
+    game_symbols(:jack).update!(wild: true)
+
+    get game_url(@game)
+    assert_select "input[name=?]", "game_symbol[excluded_symbol_ids][]"
+  end
+
   test "another person's symbol cannot be marked" do
     patch game_symbol_url(games(:other_game), game_symbols(:foreign_ace)), params: { game_symbol: { wild: "1" } }
 
