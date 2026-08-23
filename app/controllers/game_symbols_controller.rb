@@ -15,6 +15,16 @@ class GameSymbolsController < ApplicationController
     end
   end
 
+  def update
+    symbol = @game.symbols.find(params[:id])
+
+    if symbol.update(symbol_params)
+      redirect_to @game, notice: "#{symbol.display_name} updated."
+    else
+      redirect_to @game, alert: symbol.errors.full_messages.to_sentence
+    end
+  end
+
   def destroy
     symbol = @game.symbols.find(params[:id])
 
@@ -32,6 +42,6 @@ class GameSymbolsController < ApplicationController
     end
 
     def symbol_params
-      params.expect(game_symbol: [ :code, :name ])
+      params.expect(game_symbol: [ :code, :name, :wild ])
     end
 end

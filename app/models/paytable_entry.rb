@@ -14,6 +14,7 @@ class PaytableEntry < ApplicationRecord
 
   validate :count_is_reachable_in_the_window
   validate :symbol_belongs_to_the_same_game
+  validate :symbol_is_not_wild
 
   private
     def count_is_reachable_in_the_window
@@ -21,6 +22,14 @@ class PaytableEntry < ApplicationRecord
       return if count <= game.reel_count
 
       errors.add(:count, "cannot exceed the #{game.reel_count} reels the game has")
+    end
+
+    # A wild substitutes for other symbols rather than paying for itself, so an entry
+    # paying for one describes something the game never does.
+    def symbol_is_not_wild
+      return if game_symbol.nil? || !game_symbol.wild?
+
+      errors.add(:game_symbol, "is wild, and a wild substitutes rather than paying")
     end
 
     # Both records reach a game, and nothing else stops them being different ones.

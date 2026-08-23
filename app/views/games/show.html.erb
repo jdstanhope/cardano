@@ -23,7 +23,18 @@
           <% @game.symbols.order(:position).each do |symbol| %>
             <li class="flex items-baseline gap-4 py-2.5">
               <span class="w-8 font-mono text-lg text-ink"><%= symbol.code %></span>
-              <span class="flex-1 text-sm text-slate"><%= symbol.display_name %></span>
+              <span class="flex-1 text-sm text-slate">
+                <%= symbol.display_name %>
+                <% if symbol.wild? %>
+                  <span class="ml-2 border border-signal px-1.5 py-0.5 font-mono text-xs uppercase tracking-[0.14em] text-signal">Wild</span>
+                <% end %>
+              </span>
+
+              <%= button_to symbol.wild? ? "Not wild" : "Mark wild",
+                    game_symbol_path(@game, symbol),
+                    method: :patch,
+                    params: { game_symbol: { wild: symbol.wild? ? "0" : "1" } },
+                    class: "cursor-pointer font-mono text-xs uppercase tracking-[0.14em] text-slate hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
 
               <%= button_to "Remove", game_symbol_path(@game, symbol), method: :delete,
                     form: { data: { turbo_confirm: "Remove #{symbol.display_name}?" } },
@@ -50,6 +61,11 @@
             <%= form.text_field :name,
                   class: "mt-2 block w-full border border-rule bg-white px-3 py-2 text-ink focus:border-ink focus:outline-none" %>
           </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <%= form.check_box :wild, class: "h-4 w-4 border-rule text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+          <%= form.label :wild, "Wild — substitutes for other symbols", class: "text-sm text-slate" %>
         </div>
 
         <%= form.submit "Add symbol",

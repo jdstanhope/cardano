@@ -40,6 +40,8 @@ class Game < ApplicationRecord
     top_row - row
   end
 
+  def wild_symbol = symbols.wild.first
+
   # The counts a paytable can pay for: two of a kind up to a full line. Nothing pays
   # for a single symbol, so the grid does not offer it.
   def payable_counts

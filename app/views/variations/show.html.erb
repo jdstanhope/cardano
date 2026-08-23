@@ -95,6 +95,15 @@
                     <span class="ml-2 text-xs text-slate"><%= symbol.display_name %></span>
                   </th>
 
+                  <%# A wild keeps its row, with the reason there are no inputs on
+                      screen rather than left to be inferred from its absence. %>
+                  <% if symbol.wild? %>
+                    <td data-wild-row colspan="<%= @game.reel_count %>" class="px-2 py-2 text-sm text-slate">
+                      Substitutes for other symbols &mdash; does not pay on its own.
+                    </td>
+                    <% next %>
+                  <% end %>
+
                   <% (1..@game.reel_count).each do |count| %>
                     <% unless @game.payable_counts.cover?(count) %>
                       <%# Kept in the grid so the rule is visible: nothing pays for a

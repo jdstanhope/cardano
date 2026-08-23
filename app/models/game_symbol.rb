@@ -14,6 +14,17 @@ class GameSymbol < ApplicationRecord
   validates :code, presence: true, uniqueness: { scope: :game_id, case_sensitive: false }
   validates :position, presence: true, numericality: { only_integer: true }
 
+  # A wild substitutes rather than paying, so a game has at most one. It may have
+  # none — plenty of games do not use one at all.
+  validate :only_one_wild_per_game
+  validate :not_still_paying, if: :wild?
+
+  # The common case needs no extra step: a symbol called Wild is one. Matched exactly
+  # rather than by substring, so Wildcat is left alone.
+  before_validation :recognise_a_symbol_named_wild, on: :create
+
+  scope :wild, -> { where(wild: true) }
+
   # Removing a symbol on its own is refused while anything still uses it. Removing one
   # as part of its game is not — that is the cascade above, and guarding it here would
   # make deleting a game fail as soon as it had a paytable.
@@ -38,6 +49,30 @@ class GameSymbol < ApplicationRecord
   end
 
   private
+    def recognise_a_symbol_named_wild
+      self.wild = true if name.to_s.strip.casecmp?("wild")
+    end
+
+    def only_one_wild_per_game
+      return unless wild?
+      return if game.nil?
+
+      already = game.symbols.wild.where.not(id: id)
+      return if already.empty?
+
+      errors.add(:wild, "is already set on #{already.first.display_name}; a game has one wild at most")
+    end
+
+    # A wild does not pay for itself, so marking one that still has payouts would
+    # quietly strand them. Refusing matches how removal already behaves: nothing is
+    # destroyed by a checkbox.
+    def not_still_paying
+      return if paytable_entries.empty?
+
+      counts = paytable_entries.order(:count).pluck(:count).map { |count| "x#{count}" }
+      errors.add(:wild, "cannot be set while #{display_name} still pays #{counts.to_sentence}. Clear those first.")
+    end
+
     def refuse_while_in_use
       users = []
 

@@ -4,7 +4,7 @@ Rails.application.routes.draw do
 
   # The list of games is the dashboard; there is no separate dashboard concept.
   resources :games, only: %i[ index new create show edit update ] do
-    resources :symbols, only: %i[ create destroy ], controller: "game_symbols"
+    resources :symbols, only: %i[ create update destroy ], controller: "game_symbols"
 
     resources :variations, only: %i[ show create ] do
       resource :reel_strips, only: %i[ update ]
