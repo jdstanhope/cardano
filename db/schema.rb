@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_23_202757) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_23_231700) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -98,6 +98,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_202757) do
     t.index ["game_id"], name: "index_variations_on_game_id"
   end
 
+  create_table "wild_exclusions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "excluded_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "wild_id", null: false
+    t.index ["excluded_id"], name: "index_wild_exclusions_on_excluded_id"
+    t.index ["wild_id", "excluded_id"], name: "index_wild_exclusions_on_wild_id_and_excluded_id", unique: true
+    t.index ["wild_id"], name: "index_wild_exclusions_on_wild_id"
+  end
+
   add_foreign_key "game_symbols", "games"
   add_foreign_key "games", "users"
   add_foreign_key "paylines", "games"
@@ -106,4 +116,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_202757) do
   add_foreign_key "reel_strips", "variations"
   add_foreign_key "sessions", "users"
   add_foreign_key "variations", "games"
+  add_foreign_key "wild_exclusions", "game_symbols", column: "excluded_id", on_delete: :cascade
+  add_foreign_key "wild_exclusions", "game_symbols", column: "wild_id", on_delete: :cascade
 end

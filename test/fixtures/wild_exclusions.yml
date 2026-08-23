@@ -1,0 +1,3 @@
+# Deliberately empty. Every game starts substituting for everything, and the tests
+# that care about exclusions create them, so a fixture here would only make the
+# default case harder to reason about.

@@ -176,6 +176,32 @@ Both records reach a game independently, and an entry pairing a variation with a
 game's symbol describes a combination that can never land — it would skew the figures
 quietly rather than raise.
 
+### Wilds
+
+A wild substitutes for other symbols rather than paying for itself. A game has at most
+one and may have none, and a symbol named `Wild` is the wild by virtue of its name.
+
+**It substitutes for everything except what it is told to leave alone** — a deny list,
+not an allow list. The distinction matters more than it looks: with a deny list, a
+symbol added later is substitutable without anyone remembering to revisit the setting.
+With an allow list it would be silently excluded, and the result is an RTP that is too
+low while looking entirely reasonable.
+
+Two rules for evaluation, decided here and implemented when evaluation exists:
+
+**A line pays its best interpretation, once.** For each symbol, the run is the leading
+sequence of "that symbol or a wild". Several readings of one line may win; only the
+best-paying one pays. Summing them would double count, because `W W A A A` and
+`W W K K K` are the same outcome read two ways.
+
+**A line of nothing but wilds pays the best-paying symbol's full line.** It follows
+from the two rules above rather than being a special case: the wilds stand in for
+whichever symbol pays most.
+
+That second rule is also where the cheap RTP calculation needs care. Summing each
+symbol's expected run independently overstates the figure once wilds exist, for the
+same reason only one interpretation pays.
+
 ### Exactness
 
 `Variation` stores its target RTP as **integer basis points** — 9600 is 96.00%. The
