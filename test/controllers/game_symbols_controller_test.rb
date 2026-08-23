@@ -63,6 +63,81 @@ class GameSymbolsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "a symbol can be added as wild" do
+    post game_symbols_url(@game), params: { game_symbol: { code: "W", name: "Wild" } }
+
+    assert_predicate @game.symbols.find_by(code: "W"), :wild?
+  end
+
+  test "an existing symbol can be marked wild and unmarked" do
+    unused = game_symbols(:jack)
+
+    patch game_symbol_url(@game, unused), params: { game_symbol: { wild: "1" } }
+    assert_redirected_to game_url(@game)
+    assert_predicate unused.reload, :wild?
+
+    patch game_symbol_url(@game, unused), params: { game_symbol: { wild: "0" } }
+    assert_not_predicate unused.reload, :wild?
+  end
+
+  test "marking a symbol that still pays is refused with the reason" do
+    paying = game_symbols(:ten)
+
+    patch game_symbol_url(@game, paying), params: { game_symbol: { wild: "1" } }
+
+    assert_not_predicate paying.reload, :wild?
+    follow_redirect!
+    assert_select "#alert", /still pays/i
+  end
+
+  test "no marking option is offered once the game has a wild" do
+    get game_url(@game)
+    assert_select "button", text: "Mark wild"
+
+    game_symbols(:jack).update!(wild: true)
+
+    get game_url(@game)
+    # Offering it would produce a button whose only outcome is a refusal.
+    assert_select "button", { text: "Mark wild", count: 0 }
+    assert_select "button", text: "Not wild"
+  end
+
+  test "a symbol named wild is not offered an unmark, because its name decides it" do
+    @game.symbols.create!(code: "W", name: "Wild", position: 9)
+
+    get game_url(@game)
+
+    assert_select "button", { text: "Not wild", count: 0 }
+    assert_select "button", { text: "Mark wild", count: 0 }
+  end
+
+  test "the add form drops the wild checkbox once one exists" do
+    get game_url(@game)
+    assert_select "input[name=?]", "game_symbol[wild]"
+
+    game_symbols(:jack).update!(wild: true)
+
+    get game_url(@game)
+    assert_select "form input[type=checkbox][name=?]", "game_symbol[wild]", false
+    assert_select "body", /is this game's wild/
+  end
+
+  test "another person's symbol cannot be marked" do
+    patch game_symbol_url(games(:other_game), game_symbols(:foreign_ace)), params: { game_symbol: { wild: "1" } }
+
+    assert_response :not_found
+  end
+
+  test "the paytable shows the wild as substituting rather than paying" do
+    game_symbols(:jack).update!(wild: true)
+
+    get game_variation_url(@game, variations(:ninety_six))
+
+    assert_select "[data-paytable] [data-wild-row]", /substitut/i
+    assert_select "[data-paytable] input[name=?]", "payouts[#{game_symbols(:jack).id}][3]", false,
+      "a wild has nowhere to enter a payout"
+  end
+
   test "signing in is required" do
     sign_out
 
