@@ -134,15 +134,16 @@
         <span class="font-mono text-xs text-slate">Apply a set:</span>
 
         <% PaylineCatalogue.new(@game).sets.each do |set| %>
-          <%= button_to set.label, game_paylines_path(@game), params: { size: set.size },
+          <%= button_to set.label, apply_set_game_paylines_path(@game), params: { size: set.size },
                 form: { data: { turbo_confirm: @game.paylines.any? ? "Replace the #{@game.paylines.size} paylines already here with the #{set.label} set?" : nil } },
                 class: "cursor-pointer border border-rule px-2.5 py-1 font-mono text-xs uppercase tracking-[0.14em] text-slate hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
         <% end %>
       </div>
 
       <p class="mt-2 font-mono text-xs leading-relaxed text-slate">
-        Sets are nested, and every line comes with its mirror. Remove lines to make a
-        smaller set &mdash; a twenty line game is the twenty-five set with five removed.
+        Sets are nested, and every line comes with its mirror. Applying one replaces
+        what is here. Remove lines to make a smaller set &mdash; a twenty line game is
+        the twenty-five set with five removed.
       </p>
 
       <% if @game.paylines.any? %>
@@ -174,6 +175,38 @@
       <% else %>
         <p class="mt-4 text-sm text-slate">No paylines yet.</p>
       <% end %>
+
+      <%# Adding one line at a time, from the shapes this window allows that the game
+          is not already using. Ninety-nine of them on a five by three, so it stays
+          folded away until asked for. %>
+      <% in_use = @game.paylines.map(&:rows) %>
+      <% available = PaylineCatalogue.new(@game).shapes - in_use %>
+
+      <% if available.any? %>
+        <details class="mt-4">
+          <summary class="cursor-pointer font-mono text-xs uppercase tracking-[0.14em] text-slate hover:text-ink">
+            Add a line &middot; <%= available.size %> available
+          </summary>
+
+          <div data-payline-picker class="mt-4 flex flex-wrap gap-2">
+            <% available.each do |rows| %>
+              <%= button_to game_paylines_path(@game), params: { rows: rows },
+                    class: "cursor-pointer border border-rule p-1 hover:border-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink",
+                    title: rows.join(", ") do %>
+                <span class="sr-only">Add payline <%= rows.join(", ") %></span>
+                <span class="grid gap-px bg-rule" style="grid-template-columns: repeat(<%= @game.reel_count %>, 0.5rem);" aria-hidden="true">
+                  <% @game.row_indices.each do |row| %>
+                    <% rows.each do |payline_row| %>
+                      <span class="h-2 w-2 <%= payline_row == row ? "bg-signal" : "bg-paper" %>"></span>
+                    <% end %>
+                  <% end %>
+                </span>
+              <% end %>
+            <% end %>
+          </div>
+        </details>
+      <% end %>
+
     </section>
   </div>
 

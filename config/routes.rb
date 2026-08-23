@@ -5,7 +5,10 @@ Rails.application.routes.draw do
   # The list of games is the dashboard; there is no separate dashboard concept.
   resources :games, only: %i[ index new create show edit update ] do
     resources :symbols, only: %i[ create update destroy ], controller: "game_symbols"
-    resources :paylines, only: %i[ create destroy ]
+    resources :paylines, only: %i[ create destroy ] do
+      # Applying a set replaces every payline, which is not what creating one means.
+      collection { post :apply_set }
+    end
 
     resources :variations, only: %i[ show create ] do
       resource :reel_strips, only: %i[ update ]
