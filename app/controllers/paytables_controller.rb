@@ -17,7 +17,7 @@ class PaytablesController < ApplicationController
     # Whether a symbol belongs to this game is a domain rule, so PaytableForm decides
     # it and says so; filtering it out here instead would make that rule unreachable.
     def submitted_payouts
-      reachable = (1..@game.reel_count).to_set
+      reachable = @game.payable_counts.to_set
 
       params.fetch(:payouts, {}).to_unsafe_h.each_with_object({}) do |(symbol_id, cells), filtered|
         next unless symbol_id.to_s.match?(/\A\d+\z/)

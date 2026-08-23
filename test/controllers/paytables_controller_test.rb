@@ -13,14 +13,31 @@ class PaytablesControllerTest < ActionDispatch::IntegrationTest
     patch game_variation_paytable_url(@game, @variation), params: { payouts: payouts }
   end
 
-  test "the grid covers every symbol against every reachable count" do
+  test "the grid covers every symbol against every payable count" do
     get game_variation_url(@game, @variation)
 
     assert_response :success
-    assert_select "[data-paytable] input[name=?]", "payouts[#{@ace.id}][3]"
+    assert_select "[data-paytable] input[name=?]", "payouts[#{@ace.id}][2]"
     assert_select "[data-paytable] input[name=?]", "payouts[#{@ace.id}][#{@game.reel_count}]"
     assert_select "[data-paytable] input[name=?]", "payouts[#{@ace.id}][#{@game.reel_count + 1}]", false,
       "a five reel game cannot show six of a kind"
+  end
+
+  test "the single symbol column is shown but cannot be typed into" do
+    get game_variation_url(@game, @variation)
+
+    # The column stays, so the rule is visible rather than the column being absent.
+    assert_select "[data-paytable] th", text: "×1"
+    assert_select "[data-paytable] input[name=?]", "payouts[#{@ace.id}][1]", false,
+      "nothing pays for one of a kind, so there is nowhere to type one"
+  end
+
+  test "a payout submitted for a single symbol is ignored" do
+    assert_no_difference -> { @variation.paytable_entries.count } do
+      update(@king.id.to_s => { "1" => "99" })
+    end
+
+    assert_nil @variation.paytable_entries.reload.find_by(game_symbol: @king, count: 1)
   end
 
   test "saves the whole grid at once" do

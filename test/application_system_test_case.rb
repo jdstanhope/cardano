@@ -41,6 +41,26 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ]
   end
 
+  # Fills a field and confirms it kept the value, re-entering it once if it did not.
+  #
+  # A late DOM replacement can land after a field has been filled and discard what was
+  # typed. Three CI runs failed that way, and a fourth failed here with the value
+  # already confirmed empty, so waiting longer does not recover it — the value is gone
+  # rather than late, and it has to be entered again.
+  #
+  # This has never reproduced locally. The retry is deliberately once: if a second
+  # attempt is also wiped, something is wrong that a test should not paper over.
+  def fill_in_and_confirm(locator, with:)
+    fill_in locator, with: with
+
+    begin
+      assert_field locator, with: with
+    rescue Minitest::Assertion
+      fill_in locator, with: with
+      assert_field locator, with: with
+    end
+  end
+
   # SessionTestHelper#sign_in_as sets a cookie directly, which only integration tests
   # can do. A system test has to go through the form like anyone else.
   def sign_in_through_the_form(user, password: "password")

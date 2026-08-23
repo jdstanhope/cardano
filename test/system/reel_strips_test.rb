@@ -11,7 +11,7 @@ class ReelStripsTest < ApplicationSystemTestCase
     visit game_variation_path(@game, @variation)
     assert_selector "h1", text: "Variation"
 
-    fill_in "Reel 3", with: "A K K Q Q Q"
+    fill_in_and_confirm "Reel 3", with: "A K K Q Q Q"
 
     # The count is produced by JavaScript; nothing on the server sees this until save.
     within(:xpath, "//textarea[@id='reel_3']/ancestor::div[@data-controller='reel-count']") do
@@ -26,16 +26,8 @@ class ReelStripsTest < ApplicationSystemTestCase
     visit game_variation_path(@game, @variation)
     assert_selector "h1", text: "Variation"
 
-    fill_in "Reel 4", with: "A A K"
-    fill_in "Reel 5", with: "Q Q J"
-
-    # Confirm the typing survived before acting on it. A late Turbo body swap can
-    # replace the page after a field has been filled, discarding what was typed — a
-    # CI screenshot caught exactly that, with the field focused and empty. These
-    # assertions wait, so they close the window and fail at the real point if it
-    # happens rather than as a mystifying "nothing was saved" later.
-    assert_field "Reel 4", with: "A A K"
-    assert_field "Reel 5", with: "Q Q J"
+    fill_in_and_confirm "Reel 4", with: "A A K"
+    fill_in_and_confirm "Reel 5", with: "Q Q J"
 
     click_on "Save reels"
 
@@ -48,8 +40,7 @@ class ReelStripsTest < ApplicationSystemTestCase
     visit game_variation_path(@game, @variation)
     assert_selector "h1", text: "Variation"
 
-    fill_in "Reel 2", with: "A ZZ K"
-    assert_field "Reel 2", with: "A ZZ K"
+    fill_in_and_confirm "Reel 2", with: "A ZZ K"
 
     click_on "Save reels"
 

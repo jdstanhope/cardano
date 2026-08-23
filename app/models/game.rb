@@ -40,6 +40,12 @@ class Game < ApplicationRecord
     top_row - row
   end
 
+  # The counts a paytable can pay for: two of a kind up to a full line. Nothing pays
+  # for a single symbol, so the grid does not offer it.
+  def payable_counts
+    PaytableEntry::MINIMUM_COUNT..reel_count.to_i
+  end
+
   # Typed input is matched case insensitively, so "a" finds the symbol whose code is
   # "A". Returns the symbol's actual code, or nil when nothing matches.
   def resolve_code(token)
