@@ -9,6 +9,7 @@ class ReelStripsTest < ApplicationSystemTestCase
 
   test "counts the stops and symbols as a reel is typed" do
     visit game_variation_path(@game, @variation)
+    assert_selector "h1", text: "Variation"
 
     fill_in "Reel 3", with: "A K K Q Q Q"
 
@@ -23,6 +24,7 @@ class ReelStripsTest < ApplicationSystemTestCase
 
   test "saves every reel together" do
     visit game_variation_path(@game, @variation)
+    assert_selector "h1", text: "Variation"
 
     fill_in "Reel 4", with: "A A K"
     fill_in "Reel 5", with: "Q Q J"
@@ -35,6 +37,7 @@ class ReelStripsTest < ApplicationSystemTestCase
 
   test "an unknown code is reported against its reel and the typing is kept" do
     visit game_variation_path(@game, @variation)
+    assert_selector "h1", text: "Variation"
 
     fill_in "Reel 2", with: "A ZZ K"
     click_on "Save reels"

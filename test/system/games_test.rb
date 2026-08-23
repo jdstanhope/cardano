@@ -14,6 +14,7 @@ class GamesTest < ApplicationSystemTestCase
     assert_current_path games_path
 
     click_on "New game"
+    assert_selector "h1", text: "New game"
 
     within "form" do
       fill_in "Name", with: "Midnight Reels"
