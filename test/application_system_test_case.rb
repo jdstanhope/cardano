@@ -2,6 +2,13 @@ require "test_helper"
 require "socket"
 
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
+  # Capybara waits 2 seconds by default. That is enough locally and not always enough
+  # on a cold CI runner, where the first Turbo form submission has to warm up: a run
+  # failed there while passing here, and passed on re-run without any change. Waiting
+  # longer does not prove a race is gone, it just stops a slow machine reading as a
+  # failure — assertions still return as soon as the page settles.
+  Capybara.default_max_wait_time = 5
+
   if ENV["SELENIUM_REMOTE_URL"].present?
     # The browser runs in its own container, so it cannot reach the test server on
     # localhost. Bind to every interface and hand the browser this container's
@@ -32,5 +39,19 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   else
     # GitHub Actions provides its own Chrome, and so does a native checkout.
     driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ]
+  end
+
+  # SessionTestHelper#sign_in_as sets a cookie directly, which only integration tests
+  # can do. A system test has to go through the form like anyone else.
+  def sign_in_through_the_form(user, password: "password")
+    visit new_session_path
+
+    within "form" do
+      fill_in "Email address", with: user.email_address
+      fill_in "Password", with: password
+      click_on "Sign in"
+    end
+
+    assert_current_path games_path
   end
 end

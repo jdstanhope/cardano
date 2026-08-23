@@ -40,7 +40,17 @@ class Game < ApplicationRecord
     top_row - row
   end
 
+  # Typed input is matched case insensitively, so "a" finds the symbol whose code is
+  # "A". Returns the symbol's actual code, or nil when nothing matches.
+  def resolve_code(token)
+    symbol_codes_by_downcase[token.to_s.strip.downcase]
+  end
+
   private
+    def symbol_codes_by_downcase
+      @symbol_codes_by_downcase ||= symbols.pluck(:code).index_by(&:downcase)
+    end
+
     def create_first_variation
       variations.create!(number: 1)
     end
