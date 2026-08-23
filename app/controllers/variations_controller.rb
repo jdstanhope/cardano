@@ -3,6 +3,7 @@ class VariationsController < ApplicationController
     @variation = variation
     @game = @variation.game
     @form = ReelStripsForm.new(variation: @variation)
+    @paytable = PaytableForm.new(variation: @variation)
   end
 
   private
