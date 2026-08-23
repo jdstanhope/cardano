@@ -17,12 +17,9 @@ class GamesTest < ApplicationSystemTestCase
     assert_selector "h1", text: "New game"
 
     within "form" do
-      fill_in "Name", with: "Midnight Reels"
-      fill_in "Reels", with: "5"
-      fill_in "Rows", with: "3"
-
-      # See the note in reel_strips_test: confirm the typing stuck before submitting.
-      assert_field "Name", with: "Midnight Reels"
+      fill_in_and_confirm "Name", with: "Midnight Reels"
+      fill_in_and_confirm "Reels", with: "5"
+      fill_in_and_confirm "Rows", with: "3"
 
       click_on "Create game"
     end
