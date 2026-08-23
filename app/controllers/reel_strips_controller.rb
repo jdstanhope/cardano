@@ -3,6 +3,7 @@ class ReelStripsController < ApplicationController
     @variation = Current.user.games.find(params[:game_id]).variations.find(params[:variation_id])
     @game = @variation.game
     @form = ReelStripsForm.new(variation: @variation, reels: submitted_reels)
+    @paytable = PaytableForm.new(variation: @variation)
 
     if @form.save
       redirect_to [ @game, @variation ], notice: "Reels saved."

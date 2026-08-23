@@ -14,11 +14,16 @@ class GamesTest < ApplicationSystemTestCase
     assert_current_path games_path
 
     click_on "New game"
+    assert_selector "h1", text: "New game"
 
     within "form" do
       fill_in "Name", with: "Midnight Reels"
       fill_in "Reels", with: "5"
       fill_in "Rows", with: "3"
+
+      # See the note in reel_strips_test: confirm the typing stuck before submitting.
+      assert_field "Name", with: "Midnight Reels"
+
       click_on "Create game"
     end
 

@@ -8,6 +8,7 @@ Rails.application.routes.draw do
 
     resources :variations, only: %i[ show ] do
       resource :reel_strips, only: %i[ update ]
+      resource :paytable, only: %i[ update ]
     end
   end
   resources :passwords, param: :token

@@ -52,6 +52,11 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
       click_on "Sign in"
     end
 
-    assert_current_path games_path
+    # Wait for the dashboard to actually render, not just for the URL to change.
+    # assert_current_path is satisfied as soon as Turbo updates the address, which can
+    # be before the body has been replaced — and a body swap landing after the next
+    # page is being typed into wipes what was typed, so the form then submits the old
+    # value and the page looks untouched. That was the shape of two flaky CI failures.
+    assert_selector "h1", text: "Games"
   end
 end
