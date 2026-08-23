@@ -78,10 +78,18 @@ docker compose exec app bin/ci
 the importmap audit, the test suite, and seeds.
 
 A green gate is necessary but not sufficient: `bin/ci` and `.github/workflows/ci.yml`
-are separate definitions and can drift. GitHub additionally runs `test:system` and
-prepares the test database with `db:test:prepare`, which `bin/ci` does not. Always
-check the PR's checks after opening it, and treat any divergence as a bug in `bin/ci`
-worth its own issue.
+are separate definitions and can drift. GitHub prepares the test database with
+`db:test:prepare`, which `bin/ci` does not. Always check the PR's checks after opening
+it, and treat any divergence as a bug in `bin/ci` worth its own issue.
+
+**System tests run nowhere automatically.** They were removed from CI for failing
+intermittently there and never locally (#51). Run them by hand after changing anything
+that depends on JavaScript — Turbo submissions, the sign-out link, the live reel
+counter — because nothing else covers those:
+
+```sh
+docker compose exec app bin/rails test:system
+```
 
 - Never report work as complete, finished, or passing without running this and showing
   the actual output.
