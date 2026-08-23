@@ -19,9 +19,10 @@ class GameSymbol < ApplicationRecord
   validate :only_one_wild_per_game
   validate :not_still_paying, if: :wild?
 
-  # The common case needs no extra step: a symbol called Wild is one. Matched exactly
-  # rather than by substring, so Wildcat is left alone.
-  before_validation :recognise_a_symbol_named_wild, on: :create
+  # A symbol called Wild is the wild, not merely defaulted to one. Matched exactly
+  # rather than by substring, so Wildcat is left alone. Applied on every save rather
+  # than only on creation, so the name and the marking cannot disagree.
+  before_validation :recognise_a_symbol_named_wild
 
   scope :wild, -> { where(wild: true) }
 
@@ -38,6 +39,10 @@ class GameSymbol < ApplicationRecord
   def display_name
     name.presence || code
   end
+
+  # Named Wild, so the marking is not a choice: it cannot be unmarked, and nothing
+  # else in the game can be marked while it is here.
+  def named_wild? = name.to_s.strip.casecmp?("wild")
 
   # Strips reference symbols by code rather than by id, because a Postgres array cannot
   # carry a foreign key. Nothing at the database level protects this, so it is checked
@@ -60,7 +65,7 @@ class GameSymbol < ApplicationRecord
       already = game.symbols.wild.where.not(id: id)
       return if already.empty?
 
-      errors.add(:wild, "is already set on #{already.first.display_name}; a game has one wild at most")
+      errors.add(:base, "#{already.first.display_name} is already the wild for this game, and a game has one wild at most.")
     end
 
     # A wild does not pay for itself, so marking one that still has payouts would
@@ -70,7 +75,7 @@ class GameSymbol < ApplicationRecord
       return if paytable_entries.empty?
 
       counts = paytable_entries.order(:count).pluck(:count).map { |count| "x#{count}" }
-      errors.add(:wild, "cannot be set while #{display_name} still pays #{counts.to_sentence}. Clear those first.")
+      errors.add(:base, "#{display_name} cannot be wild while it still pays #{counts.to_sentence}. Clear those first.")
     end
 
     def refuse_while_in_use

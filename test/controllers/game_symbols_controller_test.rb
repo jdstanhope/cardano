@@ -90,6 +90,38 @@ class GameSymbolsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#alert", /still pays/i
   end
 
+  test "no marking option is offered once the game has a wild" do
+    get game_url(@game)
+    assert_select "button", text: "Mark wild"
+
+    game_symbols(:jack).update!(wild: true)
+
+    get game_url(@game)
+    # Offering it would produce a button whose only outcome is a refusal.
+    assert_select "button", { text: "Mark wild", count: 0 }
+    assert_select "button", text: "Not wild"
+  end
+
+  test "a symbol named wild is not offered an unmark, because its name decides it" do
+    @game.symbols.create!(code: "W", name: "Wild", position: 9)
+
+    get game_url(@game)
+
+    assert_select "button", { text: "Not wild", count: 0 }
+    assert_select "button", { text: "Mark wild", count: 0 }
+  end
+
+  test "the add form drops the wild checkbox once one exists" do
+    get game_url(@game)
+    assert_select "input[name=?]", "game_symbol[wild]"
+
+    game_symbols(:jack).update!(wild: true)
+
+    get game_url(@game)
+    assert_select "form input[type=checkbox][name=?]", "game_symbol[wild]", false
+    assert_select "body", /is this game's wild/
+  end
+
   test "another person's symbol cannot be marked" do
     patch game_symbol_url(games(:other_game), game_symbols(:foreign_ace)), params: { game_symbol: { wild: "1" } }
 
