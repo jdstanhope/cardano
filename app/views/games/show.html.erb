@@ -90,13 +90,30 @@
     <section data-paylines>
       <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Paylines</h2>
 
+      <%# Standard sets rather than drawing lines by hand. A mistyped payline is still
+          a valid payline, so it produces a plausible RTP instead of an error. %>
+      <div data-payline-sets class="mt-4 flex flex-wrap items-center gap-2">
+        <span class="font-mono text-xs text-slate">Apply a set:</span>
+
+        <% PaylineCatalogue.new(@game).sets.each do |set| %>
+          <%= button_to set.label, game_paylines_path(@game), params: { size: set.size },
+                form: { data: { turbo_confirm: @game.paylines.any? ? "Replace the #{@game.paylines.size} paylines already here with the #{set.label} set?" : nil } },
+                class: "cursor-pointer border border-rule px-2.5 py-1 font-mono text-xs uppercase tracking-[0.14em] text-slate hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+        <% end %>
+      </div>
+
+      <p class="mt-2 font-mono text-xs leading-relaxed text-slate">
+        Sets are nested, and every line comes with its mirror. Remove lines to make a
+        smaller set &mdash; a twenty line game is the twenty-five set with five removed.
+      </p>
+
       <% if @game.paylines.any? %>
         <ul class="mt-4 space-y-3">
           <% @game.paylines.order(:position).each do |payline| %>
             <%# Drawn rather than listed: a payline should look like the shape it
                 describes. offset_from_top converts a centred row index to a row
                 from the top, which is how the grid is laid out. %>
-            <li data-payline class="flex items-center gap-4">
+            <li data-payline class="flex items-center gap-3">
               <span class="w-6 font-mono text-xs text-slate"><%= payline.position %></span>
 
               <div class="grid gap-px bg-rule p-px" style="grid-template-columns: repeat(<%= @game.reel_count %>, 1rem);">
@@ -108,7 +125,11 @@
                 <% end %>
               </div>
 
-              <span class="font-mono text-xs text-slate"><%= payline.rows.join(", ") %></span>
+              <span class="flex-1 font-mono text-xs text-slate"><%= payline.rows.join(", ") %></span>
+
+              <%= button_to "Remove", game_payline_path(@game, payline), method: :delete,
+                    form: { data: { turbo_confirm: "Remove payline #{payline.position}?" } },
+                    class: "cursor-pointer font-mono text-xs uppercase tracking-[0.14em] text-slate hover:text-alert focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
             </li>
           <% end %>
         </ul>

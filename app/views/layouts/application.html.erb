@@ -9,6 +9,17 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <%# Turbo caches a snapshot of each page and can show it while fetching the real
+        one. For a tool whose pages are mostly forms holding reel strips and paytables,
+        a stale snapshot is actively misleading: it shows figures that are no longer
+        what is stored, and someone could read one and act on it.
+
+        It also matches the shape of a long-running intermittent CI failure, where a
+        filled field came back empty with no JavaScript error and the page otherwise
+        intact — which is what a cached snapshot replacing live form state looks like.
+        See #51. %>
+    <meta name="turbo-cache-control" content="no-preview">
+
     <%= yield :head %>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
