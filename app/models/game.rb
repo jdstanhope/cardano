@@ -46,6 +46,14 @@ class Game < ApplicationRecord
     PaytableEntry::MINIMUM_COUNT..reel_count.to_i
   end
 
+  # The lowest free number, rather than one past the highest, so deleting a variation
+  # does not permanently consume its number. Nil once all ninety-nine are taken.
+  def next_variation_number
+    taken = variations.pluck(:number).to_set
+
+    Variation::NUMBERS.find { |number| !taken.include?(number) }
+  end
+
   # Typed input is matched case insensitively, so "a" finds the symbol whose code is
   # "A". Returns the symbol's actual code, or nil when nothing matches.
   def resolve_code(token)

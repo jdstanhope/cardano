@@ -22,6 +22,34 @@ class VariationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "textarea[name=?]", "reels[1]", text: /#{reel_strips(:reel_one).symbols.join(" ")}/
   end
 
+  test "adds a variation and opens it" do
+    assert_difference -> { @game.variations.count }, 1 do
+      post game_variations_url(@game)
+    end
+
+    created = @game.variations.order(:number).last
+    assert_redirected_to game_variation_url(@game, created)
+    assert_equal 3, created.number, "the fixtures hold 01 and 02, so the next free number is 3"
+  end
+
+  test "a stranded game can be given its first variation" do
+    @game.variations.destroy_all
+
+    assert_difference -> { @game.variations.count }, 1 do
+      post game_variations_url(@game)
+    end
+
+    assert_equal 1, @game.variations.reload.first.number
+  end
+
+  test "a variation cannot be added to another person's game" do
+    assert_no_difference -> { Variation.count } do
+      post game_variations_url(games(:other_game))
+    end
+
+    assert_response :not_found
+  end
+
   test "another person's variation is not found" do
     get game_variation_url(games(:other_game), @variation)
 

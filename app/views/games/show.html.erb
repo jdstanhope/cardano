@@ -89,7 +89,12 @@
   </div>
 
   <section data-variations class="border-t border-rule pt-10">
-    <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Variations</h2>
+    <div class="flex flex-wrap items-baseline justify-between gap-4">
+      <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Variations</h2>
+
+      <%= button_to "New variation", game_variations_path(@game),
+            class: "cursor-pointer border border-ink px-3 py-1.5 font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+    </div>
 
     <% if @game.variations.any? %>
       <ul class="mt-4 divide-y divide-rule border-y border-rule">
@@ -111,7 +116,10 @@
         <% end %>
       </ul>
     <% else %>
-      <p class="mt-4 text-sm text-slate">No variations yet.</p>
+      <p class="mt-4 text-sm text-slate">
+        No variations yet. A variation holds the reel strips and paytable, so a game
+        needs one before its maths can be described.
+      </p>
     <% end %>
   </section>
 </div>
