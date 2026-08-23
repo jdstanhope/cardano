@@ -6,7 +6,7 @@ Rails.application.routes.draw do
   resources :games, only: %i[ index new create show edit update ] do
     resources :symbols, only: %i[ create destroy ], controller: "game_symbols"
 
-    resources :variations, only: %i[ show ] do
+    resources :variations, only: %i[ show create ] do
       resource :reel_strips, only: %i[ update ]
       resource :paytable, only: %i[ update ]
     end

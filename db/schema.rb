@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_185844) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_23_202757) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -21,8 +21,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_185844) do
     t.string "name"
     t.integer "position", null: false
     t.datetime "updated_at", null: false
+    t.boolean "wild", default: false, null: false
     t.index ["game_id", "code"], name: "index_game_symbols_on_game_id_and_code", unique: true
     t.index ["game_id"], name: "index_game_symbols_on_game_id"
+    t.index ["game_id"], name: "index_one_wild_per_game", unique: true, where: "wild"
   end
 
   create_table "games", force: :cascade do |t|

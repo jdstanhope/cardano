@@ -1,4 +1,6 @@
 class Variation < ApplicationRecord
+  NUMBERS = 1..99
+
   belongs_to :game
 
   has_many :reel_strips, -> { order(:position) }, dependent: :destroy
@@ -9,7 +11,7 @@ class Variation < ApplicationRecord
   # ordering is numeric rather than alphabetical.
   validates :number, presence: true,
                      uniqueness: { scope: :game_id },
-                     numericality: { only_integer: true, in: 1..99 }
+                     numericality: { only_integer: true, in: NUMBERS }
 
   # Basis points: 9600 is 96.00%. Stored as integers because the point of evaluating
   # every outcome is to produce exact figures, and a float target would undercut that.

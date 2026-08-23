@@ -41,6 +41,24 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ]
   end
 
+  # Dumps what the browser logged when a test fails.
+  #
+  # A field being filled and then emptied has failed in CI five times and never once
+  # on a developer machine, and two rounds of mitigation have not stopped it. Guessing
+  # at the cause from the Ruby side has run out of road; a JavaScript error at the
+  # moment it happens would be visible here and nowhere else.
+  teardown do
+    next if passed?
+    next unless page.driver.browser.respond_to?(:logs)
+
+    entries = page.driver.browser.logs.get(:browser) rescue []
+    next if entries.empty?
+
+    puts "\n--- browser console during #{name} ---"
+    entries.last(25).each { |entry| puts "  [#{entry.level}] #{entry.message}" }
+    puts "--- end ---\n"
+  end
+
   # Fills a field and confirms it kept the value, re-entering it once if it did not.
   #
   # A late DOM replacement can land after a field has been filled and discard what was
