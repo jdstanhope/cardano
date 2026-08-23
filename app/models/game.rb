@@ -11,6 +11,9 @@ class Game < ApplicationRecord
   after_create :create_first_variation
 
   validates :name, presence: true, uniqueness: { scope: :user_id }
+  validates :win_mechanic, inclusion: { in: WinMechanic::NAMES }
+
+  validate :ways_games_have_no_paylines
   validates :reel_count, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :row_count, presence: true, numericality: { only_integer: true, greater_than: 0 }
 
@@ -40,6 +43,15 @@ class Game < ApplicationRecord
     top_row - row
   end
 
+  def pays_by_ways? = win_mechanic == "ways"
+  def pays_by_lines? = !pays_by_ways?
+
+  def win_mechanic_for_evaluation = WinMechanic.for(self)
+
+  # How many ways a ways game offers, which follows from the window rather than being
+  # stored: five reels of three rows give 243.
+  def ways_count = reel_count.to_i.times.reduce(1) { |total, _| total * row_count.to_i }
+
   def wild_symbol = symbols.wild.first
 
   # Whether another symbol could be made wild. False once one exists — offering the
@@ -67,6 +79,16 @@ class Game < ApplicationRecord
   end
 
   private
+    # Switching to ways would leave the paylines describing nothing. Refused rather
+    # than discarding them, the same as marking a wild that still pays: a setting does
+    # not destroy work as a side effect.
+    def ways_games_have_no_paylines
+      return unless pays_by_ways?
+      return if paylines.empty?
+
+      errors.add(:win_mechanic, "cannot be ways while the game has #{paylines.size} paylines. Remove them first.")
+    end
+
     def symbol_codes_by_downcase
       @symbol_codes_by_downcase ||= symbols.pluck(:code).index_by(&:downcase)
     end

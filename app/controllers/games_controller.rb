@@ -49,6 +49,6 @@ class GamesController < ApplicationController
     end
 
     def game_params
-      params.expect(game: [ :name, :reel_count, :row_count ])
+      params.expect(game: [ :name, :reel_count, :row_count, :win_mechanic ])
     end
 end

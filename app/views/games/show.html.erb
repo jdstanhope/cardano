@@ -126,7 +126,21 @@
     </section>
 
     <section data-paylines>
-      <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Paylines</h2>
+      <% if @game.pays_by_ways? %>
+        <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Ways</h2>
+
+        <p class="mt-4 text-sm leading-relaxed text-slate">
+          This game pays <span class="font-mono text-ink"><%= number_with_delimiter @game.ways_count %></span>
+          ways &mdash; every arrangement of matching symbols on adjacent reels from the
+          left, wherever they land. There are no paylines to define.
+        </p>
+
+        <p class="mt-2 font-mono text-xs text-slate">
+          <%= @game.row_count %> rows across <%= @game.reel_count %> reels, and a spin
+          costs one unit per way.
+        </p>
+      <% else %>
+        <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Paylines</h2>
 
       <%# Standard sets rather than drawing lines by hand. A mistyped payline is still
           a valid payline, so it produces a plausible RTP instead of an error. %>
@@ -205,8 +219,8 @@
             <% end %>
           </div>
         </details>
+        <% end %>
       <% end %>
-
     </section>
   </div>
 

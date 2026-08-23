@@ -33,6 +33,25 @@
       stop it saving.
     </p>
 
+    <fieldset>
+      <legend class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Wins</legend>
+
+      <div class="mt-3 space-y-2">
+        <label class="flex items-start gap-2 text-sm text-slate">
+          <%= form.radio_button :win_mechanic, "lines", class: "mt-1" %>
+          <span><span class="text-ink">Paylines</span> &mdash; wins are counted along defined lines.</span>
+        </label>
+
+        <label class="flex items-start gap-2 text-sm text-slate">
+          <%= form.radio_button :win_mechanic, "ways", class: "mt-1" %>
+          <span>
+            <span class="text-ink">Ways</span> &mdash; wins count on adjacent reels from the
+            left, wherever they land. No paylines.
+          </span>
+        </label>
+      </div>
+    </fieldset>
+
     <%= form.submit "Save changes",
           class: "w-full cursor-pointer bg-ink px-4 py-3 font-mono text-xs font-medium uppercase tracking-[0.18em] text-paper hover:bg-ink/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
   <% end %>
