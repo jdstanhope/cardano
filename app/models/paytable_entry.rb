@@ -1,10 +1,14 @@
 class PaytableEntry < ApplicationRecord
+  MINIMUM_COUNT = 2
+
   belongs_to :variation
   belongs_to :game_symbol
 
   has_one :game, through: :variation
 
-  validates :count, presence: true, numericality: { only_integer: true, greater_than: 0 }
+  # A combination is at least two symbols. Nothing pays for a single one, even on a
+  # small window, so a count of 1 is a mistake rather than an unusual design.
+  validates :count, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: MINIMUM_COUNT }
   validates :payout, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :game_symbol_id, uniqueness: { scope: [ :variation_id, :count ] }
 

@@ -96,6 +96,13 @@
                   </th>
 
                   <% (1..@game.reel_count).each do |count| %>
+                    <% unless @game.payable_counts.cover?(count) %>
+                      <%# Kept in the grid so the rule is visible: nothing pays for a
+                          single symbol, so there is nowhere to type one. %>
+                      <td class="px-2 py-2 text-center font-mono text-sm text-slate/60" aria-label="not payable">&ndash;</td>
+                      <% next %>
+                    <% end %>
+
                     <% error = @paytable.error_for(symbol, count) %>
                     <td class="px-2 py-2">
                       <label class="sr-only" for="payout_<%= symbol.id %>_<%= count %>"><%= symbol.code %> times <%= count %></label>
