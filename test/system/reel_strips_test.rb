@@ -28,6 +28,15 @@ class ReelStripsTest < ApplicationSystemTestCase
 
     fill_in "Reel 4", with: "A A K"
     fill_in "Reel 5", with: "Q Q J"
+
+    # Confirm the typing survived before acting on it. A late Turbo body swap can
+    # replace the page after a field has been filled, discarding what was typed — a
+    # CI screenshot caught exactly that, with the field focused and empty. These
+    # assertions wait, so they close the window and fail at the real point if it
+    # happens rather than as a mystifying "nothing was saved" later.
+    assert_field "Reel 4", with: "A A K"
+    assert_field "Reel 5", with: "Q Q J"
+
     click_on "Save reels"
 
     assert_text "Reels saved"
@@ -40,6 +49,8 @@ class ReelStripsTest < ApplicationSystemTestCase
     assert_selector "h1", text: "Variation"
 
     fill_in "Reel 2", with: "A ZZ K"
+    assert_field "Reel 2", with: "A ZZ K"
+
     click_on "Save reels"
 
     assert_text "ZZ is not a symbol in this game"
