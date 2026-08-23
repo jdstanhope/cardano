@@ -86,9 +86,13 @@ docker compose exec app bin/rails test:system
 To watch a run as it happens, open <http://localhost:7900> and enter the password
 `secret`. The browser is deliberately not headless so this works.
 
-`bin/ci` does **not** run system tests. It stays a few seconds and needs no browser,
-and GitHub Actions runs the system tests on every pull request, so nothing is skipped
-— it is only the local gate that stays fast.
+Neither `bin/ci` nor GitHub Actions runs them. They failed intermittently in CI and
+never locally — sixteen local runs across both browser modes, no failures — so the job
+was removed rather than left to turn unrelated pull requests red. See issue #51.
+
+That makes running them a deliberate step. They cover what integration tests cannot:
+Turbo submissions, the sign-out link, and the live reel counter. Worth running after
+touching any of those, because nothing else will.
 
 ### Managing the stack
 
