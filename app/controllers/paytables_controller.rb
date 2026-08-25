@@ -4,6 +4,7 @@ class PaytablesController < ApplicationController
     @game = @variation.game
     @paytable = PaytableForm.new(variation: @variation, payouts: submitted_payouts)
     @form = ReelStripsForm.new(variation: @variation)
+    @rtp = @variation.rtp
 
     if @paytable.save
       redirect_to [ @game, @variation ], notice: "Paytable saved."

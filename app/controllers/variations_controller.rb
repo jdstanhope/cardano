@@ -4,6 +4,7 @@ class VariationsController < ApplicationController
     @game = @variation.game
     @form = ReelStripsForm.new(variation: @variation)
     @paytable = PaytableForm.new(variation: @variation)
+    @rtp = @variation.rtp
   end
 
   def create

@@ -4,6 +4,7 @@ class ReelStripsController < ApplicationController
     @game = @variation.game
     @form = ReelStripsForm.new(variation: @variation, reels: submitted_reels)
     @paytable = PaytableForm.new(variation: @variation)
+    @rtp = @variation.rtp
 
     if @form.save
       redirect_to [ @game, @variation ], notice: "Reels saved."

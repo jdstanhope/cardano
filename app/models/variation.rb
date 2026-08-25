@@ -24,6 +24,15 @@ class Variation < ApplicationRecord
 
   def label = format("%02d", number.to_i)
 
+  # The paytable as the mechanics and the RTP calculation want it: symbol, then count.
+  def paytable_lookup
+    paytable_entries.includes(:game_symbol).group_by(&:game_symbol).transform_values do |entries|
+      entries.to_h { |entry| [ entry.count, entry.payout ] }
+    end
+  end
+
+  def rtp = Rtp.new(self).call
+
   def target_rtp_min_percentage = percentage(target_rtp_min)
   def target_rtp_max_percentage = percentage(target_rtp_max)
 
