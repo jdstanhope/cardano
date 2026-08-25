@@ -202,6 +202,44 @@ That second rule is also where the cheap RTP calculation needs care. Summing eac
 symbol's expected run independently overstates the figure once wilds exist, for the
 same reason only one interpretation pays.
 
+### How a game wins
+
+A game pays by **lines** or by **ways**, and both are reached through one interface so
+evaluation does not branch on which is in use.
+
+Both answer the same question — which combinations does this spin offer to the
+paytable — and differ only in how. A mechanic yields, for each winning shape:
+
+    symbol, run length, how many times it occurs
+
+**Lines** yields one entry per payline that produces a run, each occurring once. A line
+pays its best interpretation and only that one, because several readings of one line
+may win and paying both would count the same spin twice.
+
+**Ways** yields one entry per symbol, occurring as many times as the arrangements
+allow: the product of the matching positions on each reel. It cannot enumerate its
+combinations one by one and does not need to — a 5x3 window has 243 and a 6x4 has
+4,096, but there are only ever as many entries as there are symbols. Unlike a payline,
+every winning symbol pays: two symbols can both land on one spin and both count.
+
+The multiplicity is what lets one interface serve both. Lines is always one, which is
+what it is rather than a special case.
+
+A mechanic also answers **what a spin costs**, because RTP is return over stake and the
+stake is not the same: one unit per payline, or one unit per way. Evaluation cannot
+produce a figure without asking.
+
+Runs read left to right and must begin on the leftmost reel, under both mechanics.
+
+**A run pays the longest count the paytable prices.** Five of a kind on a paytable that
+only names three pays the three, rather than nothing because five was never priced. For
+ways, the arrangements are then counted over the reels forming that combination rather
+than the whole run.
+
+A ways game has no paylines and its count follows from the window. Switching a game
+with paylines to ways is refused rather than discarding them — a setting does not
+destroy work as a side effect.
+
 ### Exactness
 
 `Variation` stores its target RTP as **integer basis points** — 9600 is 96.00%. The
