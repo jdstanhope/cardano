@@ -8,13 +8,15 @@ module WinMechanic
     def stake_units = game.paylines.size
 
     def wins(window, paytable)
-      game.paylines.filter_map { |payline| best_win_on(payline, window, paytable) }
+      game.paylines.filter_map do |payline|
+        best_win_for(payline.rows.each_with_index.map { |row, reel| window.at(reel, row) }, paytable)
+      end
     end
 
-    private
-      def best_win_on(payline, window, paytable)
-        symbols_on_line = payline.rows.each_with_index.map { |row, reel| window.at(reel, row) }
-
+    # The win a sequence of symbols produces, one per reel, or nil. Public because the
+    # RTP calculation reasons about lines as symbol sequences: it never spins, so it
+    # has no window to hand over.
+    def best_win_for(symbols_on_line, paytable)
         candidates = payable_symbols.filter_map do |symbol|
           matches = symbols_on_line.map { |shown| substitutes?(shown, symbol) ? 1 : 0 }
           run = run_length_for(symbol, matches)
@@ -25,6 +27,6 @@ module WinMechanic
         end
 
         candidates.max_by { |win| win.payout(paytable) }.then { |best| best if best&.payout(paytable)&.positive? }
-      end
+    end
   end
 end

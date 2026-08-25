@@ -259,6 +259,33 @@ possible payout to the probability of it occurring. Compute that and the rest fa
 | **Volatility** | The spread of outcomes around the average — whether the game pays small and often, or rarely and large. |
 | **Max win** | The largest achievable payout, usually expressed as a multiple of stake. |
 
+### Computing RTP without enumerating
+
+RTP does not need the outcome space walked, and computing it by expectation is exact
+rather than approximate.
+
+**Lines.** A reel stops uniformly, so for any fixed row the symbol on a reel is
+distributed exactly as that strip's frequency — shifting by a row only relabels which
+stop is landed on. Reels are independent, and every payline sees the same marginals, so
+one line's expectation is the whole answer. The sum runs over symbol combinations
+rather than stop combinations: a ten symbol five reel game has 100,000 of the former
+and tens of millions of the latter.
+
+Whole combinations are evaluated rather than each symbol's run summed separately. The
+quicker route double counts, because a line pays its best reading once and `W W A A A`
+and `W W K K K` are one outcome read two ways.
+
+**Ways.** Every symbol pays independently, so there is no best-interpretation coupling,
+and within a symbol the reels are independent. With the expected number of matching
+positions per reel and the chance of none, the expectation factorises across reels.
+
+A realistic five reel game with thirty stop strips and nine paylines computes in under
+a tenth of a second. Enumerating its 24 million stop combinations would take minutes.
+
+The other figures — hit frequency, volatility, max win — do need the outcome space,
+because they depend on the joint distribution of payout per spin and paylines share
+reel positions. That is what will need a background job.
+
 ## Why evaluation is exhaustive
 
 For a base game with static reels the outcome space is finite and small. It is the
