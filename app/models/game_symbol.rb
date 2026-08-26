@@ -11,6 +11,10 @@ class GameSymbol < ApplicationRecord
   # reference them, and Postgres rejects it.
   has_many :paytable_entries, dependent: :destroy
 
+  # Belonging to a group never blocks removal — the membership simply goes.
+  has_many :symbol_group_memberships, dependent: :destroy
+  has_many :symbol_groups, through: :symbol_group_memberships
+
   # What this wild does not substitute for, and the exclusions naming it. Both are
   # dependent, so removing either symbol takes the exclusion with it.
   has_many :wild_exclusions, foreign_key: :wild_id, dependent: :destroy, inverse_of: :wild

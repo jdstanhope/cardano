@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_23_234906) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_26_233844) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -80,6 +80,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_234906) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "symbol_group_memberships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "game_symbol_id", null: false
+    t.bigint "symbol_group_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["game_symbol_id"], name: "index_symbol_group_memberships_on_game_symbol_id"
+    t.index ["symbol_group_id", "game_symbol_id"], name: "index_memberships_on_group_and_symbol", unique: true
+    t.index ["symbol_group_id"], name: "index_symbol_group_memberships_on_symbol_group_id"
+  end
+
+  create_table "symbol_groups", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "game_id", null: false
+    t.string "name", null: false
+    t.integer "position", null: false
+    t.datetime "updated_at", null: false
+    t.index ["game_id", "name"], name: "index_symbol_groups_on_game_id_and_name", unique: true
+    t.index ["game_id"], name: "index_symbol_groups_on_game_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email_address", null: false
@@ -116,6 +136,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_234906) do
   add_foreign_key "paytable_entries", "variations"
   add_foreign_key "reel_strips", "variations"
   add_foreign_key "sessions", "users"
+  add_foreign_key "symbol_group_memberships", "game_symbols", on_delete: :cascade
+  add_foreign_key "symbol_group_memberships", "symbol_groups", on_delete: :cascade
+  add_foreign_key "symbol_groups", "games"
   add_foreign_key "variations", "games"
   add_foreign_key "wild_exclusions", "game_symbols", column: "excluded_id", on_delete: :cascade
   add_foreign_key "wild_exclusions", "game_symbols", column: "wild_id", on_delete: :cascade

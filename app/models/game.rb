@@ -3,6 +3,7 @@ class Game < ApplicationRecord
 
   has_many :symbols, class_name: "GameSymbol", dependent: :destroy
   has_many :paylines, dependent: :destroy
+  has_many :symbol_groups, -> { order(:position) }, dependent: :destroy
   has_many :variations, -> { order(:number) }, dependent: :destroy
 
   # A variation is where reel strips and the paytable live, so a game without one
