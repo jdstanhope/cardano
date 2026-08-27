@@ -52,6 +52,21 @@ class Rtp
     Result.new(value: expected_payout / stake, method: EXACT)
   end
 
+  # What the description is missing, if anything. A figure computed from an incomplete
+  # description would look like an answer while being meaningless, so say what is
+  # missing instead.
+  #
+  # Cheap — it counts records rather than evaluating anything — so it can also be asked
+  # before deciding whether a run is worth starting at all.
+  def missing_pieces
+    [].tap do |missing|
+      missing << "no reel strips" if variation.reel_strips.empty?
+      missing << "#{game.reel_count - variation.reel_strips.size} reels have no strip" if variation.reel_strips.any? && variation.reel_strips.size < game.reel_count
+      missing << "no paytable combinations" if variation.paytable_entries.empty?
+      missing << "no paylines" if game.pays_by_lines? && game.paylines.empty?
+    end
+  end
+
   private
     attr_reader :variation, :game
 
@@ -63,17 +78,6 @@ class Rtp
       case game.win_mechanic
       when "ways" then Ways.new(variation).expected_payout
       else Lines.new(variation).expected_payout
-      end
-    end
-
-    # A figure computed from an incomplete description would look like an answer while
-    # being meaningless, so say what is missing instead.
-    def missing_pieces
-      [].tap do |missing|
-        missing << "no reel strips" if variation.reel_strips.empty?
-        missing << "#{game.reel_count - variation.reel_strips.size} reels have no strip" if variation.reel_strips.any? && variation.reel_strips.size < game.reel_count
-        missing << "no paytable combinations" if variation.paytable_entries.empty?
-        missing << "no paylines" if game.pays_by_lines? && game.paylines.empty?
       end
     end
 end

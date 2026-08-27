@@ -6,6 +6,7 @@ class Variation < ApplicationRecord
   has_many :reel_strips, -> { order(:position) }, dependent: :destroy
   has_many :paytable_entries, dependent: :destroy
   has_many :rtp_figures, dependent: :destroy
+  has_many :calculations, dependent: :destroy
 
   # Two digits, padded below ten: 01, 02, 99. Stored as an integer and padded for
   # display, so "1" and "01" cannot be different values for the same variation and
@@ -50,6 +51,21 @@ class Variation < ApplicationRecord
   def previous_rtp_figure = rtp_figures.newest_first.second
 
   def rtp_history(limit = 10) = rtp_figures.newest_first.limit(limit).to_a
+
+  def missing_for_rtp = Rtp.new(self).missing_pieces
+
+  # Whether the figure on hand was computed from the description as it stands. A figure
+  # for an earlier description is still worth showing — it is the last thing known —
+  # but showing it as current would be presenting a wrong number authoritatively.
+  def rtp_figure_current?
+    figure = latest_rtp_figure
+    figure.present? && figure.fingerprint == RtpFingerprint.for(self)
+  end
+
+  # Started on view when there is nothing current and nothing already in flight.
+  # Editing a strip should not queue a run per keystroke, and a run already going will
+  # answer the same question.
+  def calculation_wanted? = missing_for_rtp.empty? && !rtp_figure_current? && calculations.in_flight.none?
 
   def target_rtp_min_percentage = percentage(target_rtp_min)
   def target_rtp_max_percentage = percentage(target_rtp_max)

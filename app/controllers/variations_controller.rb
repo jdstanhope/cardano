@@ -4,9 +4,10 @@ class VariationsController < ApplicationController
     @game = @variation.game
     @form = ReelStripsForm.new(variation: @variation)
     @paytable = PaytableForm.new(variation: @variation)
-    @rtp = @variation.record_rtp
-    @previous = @variation.previous_rtp_figure
-    @history = @variation.rtp_history
+    # Exact evaluation of an ordinary five reel game takes tens of seconds, so the page
+    # asks for the figure rather than waiting for it. What it shows meanwhile is the
+    # last figure it has, marked as describing an earlier description.
+    Calculation.start(@variation) if @variation.calculation_wanted?
   end
 
   def create

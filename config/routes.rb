@@ -16,6 +16,7 @@ Rails.application.routes.draw do
       resource :reel_strips, only: %i[ update ]
       resource :paytable, only: %i[ update ]
       resources :combinations, only: %i[ create update destroy ], controller: "paytable_combinations"
+      resources :calculations, only: %i[ create destroy ]
     end
   end
   # Copying a sample creates a game, so it is a POST to the sample rather than a GET.
