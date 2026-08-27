@@ -10,35 +10,50 @@ class PaytableStatementTest < ActionDispatch::IntegrationTest
     sign_in_as users(:one)
   end
 
-  test "every combination appears, including the ones the grid cannot express" do
+  test "every combination has a row, including the ones the grid cannot express" do
     get game_variation_url(@game, @variation)
 
     assert_response :success
-    shown = css_select("[data-paytable]").first.text
+    assert_select "[data-combination]", 15
 
-    # The top prize mixes three different symbols, so it has no cell in the grid.
-    assert_match(/2,400/, shown, "the top prize is invisible")
-
-    %w[ Sevens Bars Reds Whites Blues ].each do |group|
-      assert_match(/#{group}/, shown, "the #{group} combinations are invisible")
+    @variation.paytable.each do |entry|
+      assert_select "[data-combination='#{entry.id}']", 1, "#{entry.sequence.join(" ")} has no row"
     end
-
-    # And the ones the grid does reach are still there, so this is the whole paytable.
-    assert_match(/1,199/, shown)
   end
 
-  test "it says how many combinations there are, and how many the grid reaches" do
+  test "the top prize, which mixes three symbols, is on the page with its payout" do
+    top = @variation.paytable.max_by(&:payout)
+    assert_equal %w[ R7 W7 B7 ], top.sequence
+
     get game_variation_url(@game, @variation)
 
-    assert_match(/15 combinations, of which\s+7 can be edited in the grid/, css_select("[data-paytable]").first.text)
+    assert_select "[data-combination='#{top.id}'] input[name=payout][value=?]", "2400"
   end
 
-  test "a variation with nothing in its paytable says so" do
+  test "a group position is selected as that group" do
+    sevens = @game.symbol_groups.find_by(name: "Sevens")
+    entry = @variation.paytable.find { |e| e.sequence == [ "Sevens" ] * 3 }
+
+    get game_variation_url(@game, @variation)
+
+    assert_select "[data-combination='#{entry.id}'] option[selected][value=?]", "group:#{sevens.id}", count: 3
+  end
+
+  test "it says how many combinations there are, and how many the grid also reaches" do
+    get game_variation_url(@game, @variation)
+
+    assert_match(/15 combinations, of which\s+7 are the same symbol repeated/,
+                 css_select("[data-paytable]").first.text)
+  end
+
+  test "a variation with nothing in its paytable still offers a way to add one" do
     empty = @game.variations.create!(number: 2)
 
     get game_variation_url(@game, empty)
 
     assert_response :success
+    assert_select "[data-combination]", 0
     assert_match(/Nothing pays yet/, css_select("[data-paytable]").first.text)
+    assert_select "form[action=?]", game_variation_combinations_path(@game, empty)
   end
 end
