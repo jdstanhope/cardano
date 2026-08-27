@@ -1,0 +1,2 @@
+# Deliberately empty. Groups are a thing a game may have, not something every game
+# starts with, and the tests that care about them make their own.
