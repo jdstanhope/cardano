@@ -5,6 +5,8 @@ class VariationsController < ApplicationController
     @form = ReelStripsForm.new(variation: @variation)
     @paytable = PaytableForm.new(variation: @variation)
     @rtp = @variation.record_rtp
+    @previous = @variation.previous_rtp_figure
+    @history = @variation.rtp_history
   end
 
   def create
