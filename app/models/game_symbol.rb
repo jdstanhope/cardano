@@ -5,11 +5,10 @@
 class GameSymbol < ApplicationRecord
   belongs_to :game
 
-  # A paytable entry cannot outlive the symbol it pays for. Declaring this makes the
-  # destroy cascade correct regardless of the order associations happen to run in:
-  # without it, destroying a game removes its symbols while paytable entries still
-  # reference them, and Postgres rejects it.
-  has_many :paytable_entries, dependent: :destroy
+  # A symbol reaches its combinations through the matchers that name it. Distinct
+  # because a combination naming the same symbol three times has three matchers.
+  has_many :paytable_matchers, dependent: :destroy, inverse_of: :game_symbol
+  has_many :paytable_entries, -> { distinct }, through: :paytable_matchers
 
   # Belonging to a group never blocks removal — the membership simply goes.
   has_many :symbol_group_memberships, dependent: :destroy
@@ -47,6 +46,11 @@ class GameSymbol < ApplicationRecord
   # symbol goes, and its paytable with it, silently.
   before_destroy :refuse_while_in_use, prepend: true, unless: :destroyed_by_association
 
+  # A combination missing one of its positions describes nothing, so removing a symbol
+  # as part of its game takes the combinations naming it too. Prepended so it runs
+  # before the matchers are destroyed and the entries become unreachable.
+  before_destroy :discard_combinations_naming_it, prepend: true, if: :destroyed_by_association
+
   # A symbol that is not wild substitutes for nothing, so a list of what it does not
   # substitute for means nothing either.
   after_update :discard_exclusions_when_no_longer_wild, if: -> { saved_change_to_wild? && !wild? }
@@ -82,6 +86,10 @@ class GameSymbol < ApplicationRecord
       wild_exclusions.destroy_all
     end
 
+    def discard_combinations_naming_it
+      paytable_entries.to_a.each(&:destroy)
+    end
+
     def recognise_a_symbol_named_wild
       self.wild = true if name.to_s.strip.casecmp?("wild")
     end
@@ -102,8 +110,8 @@ class GameSymbol < ApplicationRecord
     def not_still_paying
       return if paytable_entries.empty?
 
-      counts = paytable_entries.order(:count).pluck(:count).map { |count| "x#{count}" }
-      errors.add(:base, "#{display_name} cannot be wild while it still pays #{counts.to_sentence}. Clear those first.")
+      lengths = paytable_entries.map(&:length).sort.map { |length| "x#{length}" }
+      errors.add(:base, "#{display_name} cannot be wild while it still pays #{lengths.to_sentence}. Clear those first.")
     end
 
     def refuse_while_in_use
@@ -115,8 +123,8 @@ class GameSymbol < ApplicationRecord
         users << "reel strips (#{described.to_sentence})"
       end
 
-      counts = paytable_entries.order(:count).pluck(:count)
-      users << "paytable entries (#{counts.map { |c| "x#{c}" }.to_sentence})" if counts.any?
+      lengths = paytable_entries.map(&:length).sort
+      users << "paytable entries (#{lengths.map { |length| "x#{length}" }.to_sentence})" if lengths.any?
 
       return if users.empty?
 

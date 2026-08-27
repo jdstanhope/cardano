@@ -24,11 +24,10 @@ class Variation < ApplicationRecord
 
   def label = format("%02d", number.to_i)
 
-  # The paytable as the mechanics and the RTP calculation want it: symbol, then count.
-  def paytable_lookup
-    paytable_entries.includes(:game_symbol).group_by(&:game_symbol).transform_values do |entries|
-      entries.to_h { |entry| [ entry.count, entry.payout ] }
-    end
+  # The combinations this variation pays for, with their matchers loaded: the mechanics
+  # ask each one whether it matches, so they are read many times over.
+  def paytable
+    paytable_entries.includes(matchers: [ :game_symbol, { symbol_group: :game_symbols } ]).to_a
   end
 
   def rtp = Rtp.new(self).call

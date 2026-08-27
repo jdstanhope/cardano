@@ -9,6 +9,13 @@ class PaytablesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as @game.user
   end
 
+  # The grid edits N-of-a-kind combinations, which are one symbol repeated.
+  def repeated(symbol, length)
+    @variation.paytable_entries.includes(:matchers).find do |entry|
+      entry.length == length && entry.matchers.all? { |matcher| matcher.game_symbol_id == symbol.id }
+    end
+  end
+
   def update(payouts)
     patch game_variation_paytable_url(@game, @variation), params: { payouts: payouts }
   end
@@ -37,31 +44,31 @@ class PaytablesControllerTest < ActionDispatch::IntegrationTest
       update(@king.id.to_s => { "1" => "99" })
     end
 
-    assert_nil @variation.paytable_entries.reload.find_by(game_symbol: @king, count: 1)
+    assert_nil @variation.paytable_entries.reload.then { repeated(@king, 1) }
   end
 
   test "saves the whole grid at once" do
     update(@king.id.to_s => { "3" => "4", "4" => "20", "5" => "80" })
 
     assert_redirected_to game_variation_url(@game, @variation)
-    entries = @variation.paytable_entries.where(game_symbol: @king).order(:count)
-    assert_equal [ [ 3, 4 ], [ 4, 20 ], [ 5, 80 ] ], entries.map { |e| [ e.count, e.payout ] }
+    entries = [ 3, 4, 5 ].filter_map { |length| repeated(@king, length) }
+    assert_equal [ [ 3, 4 ], [ 4, 20 ], [ 5, 80 ] ], entries.map { |e| [ e.length, e.payout ] }
   end
 
   test "a blank cell means the combination does not pay" do
     update(@ace.id.to_s => { "3" => "", "4" => "25" })
 
-    assert_nil @variation.paytable_entries.find_by(game_symbol: @ace, count: 3)
-    assert_equal 25, @variation.paytable_entries.find_by(game_symbol: @ace, count: 4).payout
+    assert_nil repeated(@ace, 3)
+    assert_equal 25, repeated(@ace, 4).payout
   end
 
   test "clearing a cell removes the entry that was there" do
-    existing = @variation.paytable_entries.find_by(game_symbol: @ace, count: 3)
+    existing = repeated(@ace, 3)
     assert existing
 
     update(@ace.id.to_s => { "3" => "" })
 
-    assert_nil @variation.paytable_entries.reload.find_by(game_symbol: @ace, count: 3)
+    assert_nil @variation.paytable_entries.reload.then { repeated(@ace, 3) }
   end
 
   test "a payout must be a positive whole number, reported against its cell" do
@@ -72,12 +79,12 @@ class PaytablesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "nothing is saved when any cell is rejected" do
-    before = @variation.paytable_entries.reload.map { |e| [ e.game_symbol_id, e.count, e.payout ] }.sort
+    before = @variation.paytable_entries.reload.includes(:matchers).map { |e| [ e.matchers.map(&:game_symbol_id), e.payout ] }.sort
 
     update(@king.id.to_s => { "3" => "4" }, @ace.id.to_s => { "3" => "-1" })
 
     assert_response :unprocessable_entity
-    assert_equal before, @variation.paytable_entries.reload.map { |e| [ e.game_symbol_id, e.count, e.payout ] }.sort,
+    assert_equal before, @variation.paytable_entries.reload.includes(:matchers).map { |e| [ e.matchers.map(&:game_symbol_id), e.payout ] }.sort,
       "a rejected save must leave the whole paytable as it was"
   end
 
@@ -85,7 +92,7 @@ class PaytablesControllerTest < ActionDispatch::IntegrationTest
     update(game_symbols(:foreign_ace).id.to_s => { "3" => "5" })
 
     assert_response :unprocessable_entity
-    assert_nil @variation.paytable_entries.reload.find_by(game_symbol_id: game_symbols(:foreign_ace).id)
+    assert_nil repeated(game_symbols(:foreign_ace), 3)
   end
 
   test "another person's variation cannot be written to" do

@@ -62,7 +62,7 @@ class Game < ApplicationRecord
   # The counts a paytable can pay for: two of a kind up to a full line. Nothing pays
   # for a single symbol, so the grid does not offer it.
   def payable_counts
-    PaytableEntry::MINIMUM_COUNT..reel_count.to_i
+    PaytableEntry::MINIMUM_LENGTH..reel_count.to_i
   end
 
   # The lowest free number, rather than one past the highest, so deleting a variation

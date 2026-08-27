@@ -80,6 +80,6 @@ class GameSymbolRemovalTest < ActiveSupport::TestCase
     assert_nothing_raised { @game.destroy! }
 
     assert_empty GameSymbol.where(game_id: @game.id)
-    assert_empty PaytableEntry.where(game_symbol_id: game_symbols(:ace).id)
+    assert_empty PaytableMatcher.where(game_symbol_id: game_symbols(:ace).id)
   end
 end

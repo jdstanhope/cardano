@@ -1,32 +1,36 @@
 module WinMechanic
-  # One entry per symbol, occurring as many times as the arrangements allow.
+  # One entry per winning combination, occurring as many times as the arrangements
+  # allow: the product of the matching positions on each reel it covers.
   #
-  # Ways cannot enumerate its combinations one by one and does not need to: a 5x3
+  # Ways cannot enumerate its combinations one by one and does not need to — a 5x3
   # window has 243 of them and a 6x4 has 4,096, but there are only ever as many entries
-  # as there are symbols. The count is the product of the matching positions on each
-  # reel, up to where the run stops.
+  # as the paytable has.
   #
-  # Unlike a payline, every winning symbol pays. There is no single line to choose a
-  # best interpretation on, so A x3 and K x3 can both land on one spin and both count.
+  # Unlike a payline, several combinations pay at once: A x3 and K x3 can both land on
+  # one spin and both count. But not every match may pay, or one outcome gets counted
+  # twice — four of a kind also matches the three of a kind entry. Only the best-paying
+  # match for each starting matcher counts, which for N-of-a-kind is one per symbol.
   class Ways < Base
-    # One unit per way, and the ways are the product of the rows on each reel.
     def stake_units = game.reel_count.times.reduce(1) { |total, _| total * game.row_count }
 
-    def wins(window, paytable)
-      payable_symbols.filter_map do |symbol|
-        matches = (0...game.reel_count).map { |reel| window.matches_on(reel, symbol) }
-        run = run_length_for(symbol, matches)
-        next if run.zero?
-
-        # The arrangements are counted over the reels that form the combination being
-        # paid, which is not always the whole run.
-        paying = WinMechanic.paying_length(symbol, run, paytable)
-        next if paying.nil?
-
-        win = Win.new(symbol: symbol, length: paying, times: matches.take(paying).reduce(:*))
-
-        win if win.payout(paytable).positive?
+    def wins(window, entries)
+      candidates = entries.filter_map do |entry|
+        times = arrangements(entry, window)
+        Win.new(entry: entry, times: times) if times.positive?
       end
+
+      candidates.group_by { |win| win.entry.matchers.first&.label }.values.map { |group| group.max_by(&:payout) }
     end
+
+    private
+      # Zero unless every reel the combination covers offers at least one match.
+      def arrangements(entry, window)
+        entry.matchers.each_with_index.reduce(1) do |total, (matcher, reel)|
+          count = window.matches_for(reel, matcher)
+          return 0 if count.zero?
+
+          total * count
+        end
+      end
   end
 end

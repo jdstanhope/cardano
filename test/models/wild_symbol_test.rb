@@ -74,10 +74,11 @@ class WildSymbolTest < ActiveSupport::TestCase
   test "a wild cannot be given a paytable entry" do
     @unused.update!(wild: true)
 
-    entry = variations(:ninety_six).paytable_entries.new(game_symbol: @unused, count: 3, payout: 5)
+    entry = variations(:ninety_six).paytable_entries.new(payout: 5)
+    3.times { |index| entry.matchers.build(position: index + 1, game_symbol: @unused) }
 
     assert_not entry.valid?
-    assert_match(/wild/i, entry.errors[:game_symbol].to_sentence)
+    assert_match(/wild/i, entry.matchers.first.errors[:game_symbol].to_sentence)
   end
 
   test "unmarking a wild that is not named wild is allowed, and frees the slot" do

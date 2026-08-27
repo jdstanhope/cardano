@@ -21,11 +21,11 @@ class Rtp
 
     def expected_payout
       mechanic = WinMechanic.for(game)
-      paytable = variation.paytable_lookup
+      entries = variation.paytable
 
       per_line = combinations.sum do |combination, probability|
-        win = mechanic.best_win_for(combination, paytable)
-        win ? probability * win.payout(paytable) : 0
+        win = mechanic.best_win_for(combination, entries)
+        win ? probability * win.payout : 0
       end
 
       per_line * game.paylines.size
