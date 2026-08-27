@@ -44,6 +44,13 @@ class Variation < ApplicationRecord
 
   def latest_rtp_figure = rtp_figures.newest_first.first
 
+  # The figure before the most recent one, which is what a change is measured against.
+  # Nil until a second figure exists, and a variation that has never been changed
+  # legitimately has nothing to compare with.
+  def previous_rtp_figure = rtp_figures.newest_first.second
+
+  def rtp_history(limit = 10) = rtp_figures.newest_first.limit(limit).to_a
+
   def target_rtp_min_percentage = percentage(target_rtp_min)
   def target_rtp_max_percentage = percentage(target_rtp_max)
 
