@@ -5,8 +5,13 @@
     <%= link_to "Games", games_path, class: "font-mono text-xs uppercase tracking-[0.18em] text-slate hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
     <div class="mt-2 flex flex-wrap items-baseline justify-between gap-4">
       <h1 class="text-3xl font-semibold tracking-tight"><%= @game.name %></h1>
-      <%= link_to "Edit", edit_game_path(@game),
-            class: "border border-rule px-3 py-1.5 font-mono text-xs font-medium uppercase tracking-[0.18em] text-slate hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+      <div class="flex flex-wrap items-baseline gap-2">
+        <%# Duplicating is how you try something without risking the game you have. %>
+        <%= button_to "Duplicate", game_duplicate_path(@game),
+              class: "border border-rule px-3 py-1.5 font-mono text-xs font-medium uppercase tracking-[0.18em] text-slate hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+        <%= link_to "Edit", edit_game_path(@game),
+              class: "border border-rule px-3 py-1.5 font-mono text-xs font-medium uppercase tracking-[0.18em] text-slate hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+      </div>
     </div>
     <p class="mt-2 font-mono text-xs text-slate">
       <%= @game.reel_count %>&times;<%= @game.row_count %> window &middot;

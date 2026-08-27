@@ -264,10 +264,34 @@ once, the total would come out wrong rather than raising anything.
 
 It computes 86.5761%, which is 86.58% to the precision published.
 
+That definition is not confined to the test. It lives in `SampleGame::RedWhiteAndBlue`
+and is also what somebody copies into their account from the games list, so the example
+handed to a newcomer is the same data the calculation is proven against — an example
+that is demonstrably right rather than one that merely looks plausible.
+
 That last check also settled something the source did not state. Nothing published says
 which symbols count as red, white or blue; the classic design colours the bars, one bar
 red, two bar white, three bar blue. Under any other reading the total does not land on
 the published figure, so the figure decided the question.
+
+### Copying a game
+
+Describing a game means entering symbols, groups, a reel window, paylines, strips and a
+paytable by hand. Two situations avoid that: starting from a worked example, and trying
+a change without risking the game you already have. Both are the same mechanism —
+duplicating a game — and a sample is simply a template that gets duplicated.
+
+`GameDuplication` rebuilds the whole graph: symbols, groups and their memberships, wild
+substitution rules, paylines, and every variation with its strips and paytable
+combinations. The hazard is not failure but success that is subtly wrong. A reference
+left pointing at the original's rows would not raise; the copy would read as complete
+while quietly sharing a paytable with the game it came from, so that editing one changed
+the other. Nothing copies an id — every association is rewired through a map built as
+records are created, and a lookup for something unmapped raises rather than returning
+nil.
+
+The check that matters is that a duplicate computes the same RTP as its original. That
+one number covers the whole graph; no assertion about record counts would.
 
 ### Exactness
 

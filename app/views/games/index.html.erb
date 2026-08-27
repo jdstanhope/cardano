@@ -27,6 +27,8 @@
         </li>
       <% end %>
     </ul>
+
+    <%= render "samples", wrapper_class: "mt-16" %>
   <% else %>
     <%# Every account starts here, so this is an invitation rather than a notice. %>
     <div class="py-16 text-center">
@@ -37,6 +39,8 @@
       </p>
       <%= link_to "New game", new_game_path,
             class: "mt-8 inline-block bg-ink px-5 py-3 font-mono text-xs font-medium uppercase tracking-[0.18em] text-paper hover:bg-ink/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+
+      <%= render "samples", wrapper_class: "mt-16 text-left" %>
     </div>
   <% end %>
 </div>
