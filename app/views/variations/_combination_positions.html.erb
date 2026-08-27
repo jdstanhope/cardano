@@ -2,7 +2,9 @@
 
     A combination is an ordered sequence, so each position is chosen separately and the
     order on screen is the order it is matched in. %>
-<% choices = game.symbols.reject(&:wild?).map { |symbol| [ "#{symbol.code} — #{symbol.display_name}", "symbol:#{symbol.id}" ] } %>
+<%# Codes rather than code-and-name: five of these sit in one row on a five reel game,
+    and the grid directly above spells out what each code is. %>
+<% choices = game.symbols.reject(&:wild?).map { |symbol| [ symbol.code, "symbol:#{symbol.id}" ] } %>
 <% groups = game.symbol_groups.map { |group| [ "any #{group.name}", "group:#{group.id}" ] } %>
 
 <span class="flex flex-wrap items-center gap-1.5">
@@ -12,7 +14,7 @@
 
     <select name="sequence[]"
             aria-label="Position <%= position %>"
-            class="border border-rule bg-white px-1.5 py-1 font-mono text-xs text-ink focus:border-ink focus:outline-none">
+            class="w-28 border border-rule bg-white px-1.5 py-1 font-mono text-xs text-ink focus:border-ink focus:outline-none">
       <option value=""<%= " selected" if selected.nil? %>>&mdash;</option>
       <optgroup label="Symbols">
         <%= options_for_select(choices, selected) %>

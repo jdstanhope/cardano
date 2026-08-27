@@ -10,13 +10,13 @@ class PaytableCombinationsController < ApplicationController
   def create
     entry = @variation.paytable_entries.new
 
-    write(entry) { redirect_back_with notice: "Added #{describe(entry)}." }
+    write(entry) { redirect_back_with notice: "Added #{describe(entry)}.#{moved(entry)}" }
   end
 
   def update
     entry = @variation.paytable_entries.find(params[:id])
 
-    write(entry) { redirect_back_with notice: "Saved #{describe(entry)}." }
+    write(entry) { redirect_back_with notice: "Saved #{describe(entry)}.#{moved(entry)}" }
   end
 
   def destroy
@@ -81,6 +81,11 @@ class PaytableCombinationsController < ApplicationController
     end
 
     def describe(entry) = entry.sequence.join(" ")
+
+    # The same symbol in every position is edited in the grid, so a row that becomes one
+    # leaves this list. Said out loud, because a row disappearing on save otherwise
+    # reads as having lost the edit.
+    def moved(entry) = entry.n_of_a_kind? ? " The same symbol repeated is edited in the grid above." : ""
 
     def redirect_back_with(**flash) = redirect_to([ @game, @variation ], **flash)
 end
