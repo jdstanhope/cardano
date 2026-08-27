@@ -1,44 +1,45 @@
+# What one combination pays.
+#
+# A combination is an ordered sequence of matchers, one per reel from the leftmost.
+# Three of a kind is a sequence of the same symbol three times rather than a special
+# case, and that is what lets a paytable express R7 W7 B7, or any red then any white
+# then any blue, in the same shape.
 class PaytableEntry < ApplicationRecord
-  MINIMUM_COUNT = 2
+  MINIMUM_LENGTH = 2
 
   belongs_to :variation
-  belongs_to :game_symbol
 
+  has_many :matchers, -> { order(:position) }, class_name: "PaytableMatcher", dependent: :destroy
   has_one :game, through: :variation
 
-  # A combination is at least two symbols. Nothing pays for a single one, even on a
-  # small window, so a count of 1 is a mistake rather than an unusual design.
-  validates :count, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: MINIMUM_COUNT }
   validates :payout, presence: true, numericality: { only_integer: true, greater_than: 0 }
-  validates :game_symbol_id, uniqueness: { scope: [ :variation_id, :count ] }
 
-  validate :count_is_reachable_in_the_window
-  validate :symbol_belongs_to_the_same_game
-  validate :symbol_is_not_wild
+  validate :long_enough_to_be_a_combination
+  validate :fits_the_reels
+
+  # The symbols and groups this combination accepts, in order.
+  def sequence = matchers.map(&:label)
+
+  def length = matchers.size
+
+  # Whether a line of symbols, one per reel from the leftmost, satisfies this
+  # combination. A longer line is fine: the combination occupies its opening reels.
+  def matches?(symbols_on_line)
+    return false if matchers.empty? || symbols_on_line.length < length
+
+    matchers.each_with_index.all? { |matcher, index| matcher.matches?(symbols_on_line[index]) }
+  end
 
   private
-    def count_is_reachable_in_the_window
-      return if game.nil? || count.nil?
-      return if count <= game.reel_count
+    def long_enough_to_be_a_combination
+      return if matchers.size >= MINIMUM_LENGTH
 
-      errors.add(:count, "cannot exceed the #{game.reel_count} reels the game has")
+      errors.add(:base, "A combination is at least #{MINIMUM_LENGTH} symbols; nothing pays for one")
     end
 
-    # A wild substitutes for other symbols rather than paying for itself, so an entry
-    # paying for one describes something the game never does.
-    def symbol_is_not_wild
-      return if game_symbol.nil? || !game_symbol.wild?
+    def fits_the_reels
+      return if game.nil? || matchers.size <= game.reel_count
 
-      errors.add(:game_symbol, "is wild, and a wild substitutes rather than paying")
-    end
-
-    # Both records reach a game, and nothing else stops them being different ones.
-    # An entry for a symbol from another game describes a combination that can
-    # never land, which would quietly skew the figures rather than raise.
-    def symbol_belongs_to_the_same_game
-      return if game.nil? || game_symbol.nil?
-      return if game_symbol.game_id == game.id
-
-      errors.add(:game_symbol, "belongs to a different game")
+      errors.add(:base, "A combination cannot be longer than the #{game.reel_count} reels the game has")
     end
 end

@@ -3,52 +3,91 @@ require "test_helper"
 class PaytableEntryTest < ActiveSupport::TestCase
   setup do
     @variation = variations(:ninety_six)
+    @game = @variation.game
+    @ace = game_symbols(:ace)
+    @king = game_symbols(:king)
   end
 
-  test "requires a count and a payout" do
-    entry = PaytableEntry.new(variation: @variation, game_symbol: game_symbols(:king))
+  def build(payout: 5, things: [ @king, @king, @king ])
+    @variation.paytable_entries.new(payout: payout).tap do |entry|
+      things.each_with_index do |thing, index|
+        key = thing.is_a?(SymbolGroup) ? :symbol_group : :game_symbol
+        entry.matchers.build(position: index + 1, key => thing)
+      end
+    end
+  end
 
-    assert_not entry.valid?
-    assert entry.errors.of_kind?(:count, :blank)
-    assert entry.errors.of_kind?(:payout, :blank)
+  test "a combination is a sequence of matchers" do
+    entry = build(things: [ @ace, @king, @ace ])
+
+    assert entry.valid?, entry.errors.full_messages.to_sentence
+    assert_equal 3, entry.length
+    assert_equal %w[ A K A ], entry.sequence
   end
 
   test "nothing pays for a single symbol" do
-    assert_not PaytableEntry.new(variation: @variation, game_symbol: game_symbols(:king), count: 1, payout: 1).valid?,
-      "no game pays one of a kind, so a count of 1 is a mistake rather than an unusual design"
+    assert_not build(things: [ @king ]).valid?
   end
 
   test "two of a kind is allowed, since some games do pay from two" do
-    assert PaytableEntry.new(variation: @variation, game_symbol: game_symbols(:king), count: 2, payout: 1).valid?
+    assert build(things: [ @king, @king ]).valid?
   end
 
-  test "the count must be a number of symbols the game can show" do
-    assert PaytableEntry.new(variation: @variation, game_symbol: game_symbols(:king), count: 5, payout: 1).valid?
-    assert_not PaytableEntry.new(variation: @variation, game_symbol: game_symbols(:king), count: 6, payout: 1).valid?,
-      "a five reel game cannot show six of a kind"
-    assert_not PaytableEntry.new(variation: @variation, game_symbol: game_symbols(:king), count: 0, payout: 1).valid?
+  test "a combination cannot be longer than the reels" do
+    assert build(things: [ @king ] * @game.reel_count).valid?
+    assert_not build(things: [ @king ] * (@game.reel_count + 1)).valid?
   end
 
-  test "a payout is a positive whole number of credits" do
-    assert_not PaytableEntry.new(variation: @variation, game_symbol: game_symbols(:king), count: 3, payout: 0).valid?
-    assert_not PaytableEntry.new(variation: @variation, game_symbol: game_symbols(:king), count: 3, payout: -5).valid?
+  test "a payout is a positive whole number" do
+    assert_not build(payout: 0).valid?
+    assert_not build(payout: -5).valid?
   end
 
-  test "one entry per symbol and count" do
-    taken = paytable_entries(:ace_three)
-    duplicate = PaytableEntry.new(variation: taken.variation, game_symbol: taken.game_symbol, count: taken.count, payout: 99)
+  test "a matcher names one symbol or one group, not both" do
+    bars = @game.symbol_groups.create!(name: "Bars", position: 1)
+    matcher = PaytableMatcher.new(paytable_entry: build, position: 1, game_symbol: @ace, symbol_group: bars)
 
-    assert_not duplicate.valid?
+    assert_not matcher.valid?
   end
 
-  test "the same symbol may pay at several counts" do
-    assert_equal 2, @variation.paytable_entries.where(game_symbol: game_symbols(:ace)).count
+  test "a matcher naming neither is rejected" do
+    assert_not PaytableMatcher.new(paytable_entry: build, position: 1).valid?
   end
 
-  test "rejects a symbol belonging to a different game" do
-    entry = PaytableEntry.new(variation: @variation, game_symbol: game_symbols(:foreign_ace), count: 3, payout: 5)
+  test "a matcher cannot name a symbol from another game" do
+    entry = build
+    entry.matchers.build(position: 9, game_symbol: game_symbols(:foreign_ace))
 
-    assert_not entry.valid?, "a symbol from another game can never land in this one"
-    assert_match(/game/i, entry.errors[:game_symbol].to_sentence)
+    assert_not entry.valid?
+  end
+
+  test "a combination matches a line whose opening symbols satisfy it" do
+    entry = build(things: [ @ace, @ace ])
+    entry.save!
+
+    assert entry.matches?([ @ace, @ace, @king, @king, @king ])
+    assert entry.matches?([ @ace, @ace, @ace, @ace, @ace ]), "a longer line still opens with two aces"
+    assert_not entry.matches?([ @king, @ace, @ace, @king, @king ]), "it must start on the leftmost reel"
+    assert_not entry.matches?([ @ace ]), "a line shorter than the combination cannot satisfy it"
+  end
+
+  test "a group matcher matches any member" do
+    bars = @game.symbol_groups.create!(name: "Bars", position: 1)
+    bars.game_symbols << [ @ace, @king ]
+    entry = build(things: [ bars, bars ])
+    entry.save!
+
+    assert entry.matches?([ @ace, @king, @king ])
+    assert entry.matches?([ @king, @ace, @king ])
+    assert_not entry.matches?([ game_symbols(:queen), @ace, @king ])
+  end
+
+  test "destroying a combination takes its matchers" do
+    entry = build
+    entry.save!
+
+    assert_difference -> { PaytableMatcher.count }, -3 do
+      entry.destroy
+    end
   end
 end

@@ -1,0 +1,9 @@
+# A combination is a sequence, so three of a kind is the same symbol three times.
+<% { ace_three: [ :ace, 3 ], ace_four: [ :ace, 4 ], ten_three: [ :ten, 3 ] }.each do |entry, (symbol, length)| %>
+<% length.times do |index| %>
+<%= entry %>_<%= index + 1 %>:
+  paytable_entry: <%= entry %>
+  position: <%= index + 1 %>
+  game_symbol: <%= symbol %>
+<% end %>
+<% end %>

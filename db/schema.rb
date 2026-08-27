@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_26_233844) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_27_002438) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -50,15 +50,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_233844) do
   end
 
   create_table "paytable_entries", force: :cascade do |t|
-    t.integer "count", null: false
     t.datetime "created_at", null: false
-    t.bigint "game_symbol_id", null: false
     t.integer "payout", null: false
     t.datetime "updated_at", null: false
     t.bigint "variation_id", null: false
-    t.index ["game_symbol_id"], name: "index_paytable_entries_on_game_symbol_id"
-    t.index ["variation_id", "game_symbol_id", "count"], name: "index_paytable_entries_on_variation_symbol_count", unique: true
     t.index ["variation_id"], name: "index_paytable_entries_on_variation_id"
+  end
+
+  create_table "paytable_matchers", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "game_symbol_id"
+    t.bigint "paytable_entry_id", null: false
+    t.integer "position", null: false
+    t.bigint "symbol_group_id"
+    t.datetime "updated_at", null: false
+    t.index ["game_symbol_id"], name: "index_paytable_matchers_on_game_symbol_id"
+    t.index ["paytable_entry_id", "position"], name: "index_paytable_matchers_on_paytable_entry_id_and_position", unique: true
+    t.index ["paytable_entry_id"], name: "index_paytable_matchers_on_paytable_entry_id"
+    t.index ["symbol_group_id"], name: "index_paytable_matchers_on_symbol_group_id"
+    t.check_constraint "(game_symbol_id IS NOT NULL) <> (symbol_group_id IS NOT NULL)", name: "matcher_names_exactly_one_of_symbol_or_group"
   end
 
   create_table "reel_strips", force: :cascade do |t|
@@ -132,8 +142,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_233844) do
   add_foreign_key "game_symbols", "games"
   add_foreign_key "games", "users"
   add_foreign_key "paylines", "games"
-  add_foreign_key "paytable_entries", "game_symbols"
   add_foreign_key "paytable_entries", "variations"
+  add_foreign_key "paytable_matchers", "game_symbols", on_delete: :cascade
+  add_foreign_key "paytable_matchers", "paytable_entries", on_delete: :cascade
+  add_foreign_key "paytable_matchers", "symbol_groups", on_delete: :cascade
   add_foreign_key "reel_strips", "variations"
   add_foreign_key "sessions", "users"
   add_foreign_key "symbol_group_memberships", "game_symbols", on_delete: :cascade

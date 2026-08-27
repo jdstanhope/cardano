@@ -46,10 +46,20 @@ class PaytableForm
       end
     end
 
+    # The grid edits N-of-a-kind combinations, which are sequences of one repeated
+    # symbol. Anything else a variation holds is left alone by it.
     def existing_entries
-      @existing_entries ||= variation.paytable_entries.group_by(&:game_symbol_id).transform_values do |entries|
-        entries.to_h { |entry| [ entry.count, entry.payout ] }
+      @existing_entries ||= variation.paytable_entries.includes(matchers: :game_symbol).each_with_object({}) do |entry, found|
+        symbol_id = repeated_symbol_id(entry)
+        next if symbol_id.nil?
+
+        (found[symbol_id] ||= {})[entry.length] = entry.payout
       end
+    end
+
+    def repeated_symbol_id(entry)
+      ids = entry.matchers.map(&:game_symbol_id)
+      ids.first if ids.any? && ids.uniq.length == 1 && entry.matchers.all? { |matcher| matcher.symbol_group_id.nil? }
     end
 
     def payable_symbol_ids = @payable_symbol_ids ||= game.symbols.pluck(:id).to_set
@@ -77,12 +87,22 @@ class PaytableForm
     end
 
     def write(symbol_id, count, payout)
-      entry = variation.paytable_entries.find_or_initialize_by(game_symbol_id: symbol_id, count: count)
+      entry = find_repeated_entry(symbol_id, count)
 
       if payout.nil?
-        entry.destroy if entry.persisted?
-      else
+        entry&.destroy
+      elsif entry
         entry.update!(payout: payout)
+      else
+        created = variation.paytable_entries.new(payout: payout)
+        count.times { |index| created.matchers.build(position: index + 1, game_symbol_id: symbol_id) }
+        created.save!
+      end
+    end
+
+    def find_repeated_entry(symbol_id, count)
+      variation.paytable_entries.includes(:matchers).find do |entry|
+        entry.length == count && repeated_symbol_id(entry) == symbol_id
       end
     end
 end

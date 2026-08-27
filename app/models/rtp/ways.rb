@@ -1,82 +1,94 @@
 class Rtp
   # Expected payout of a ways game, per unit of way stake.
   #
-  # Every symbol pays independently in a ways game, so there is no best-interpretation
-  # coupling and each symbol can be taken on its own. Within a symbol, the reels are
-  # independent, so the expectation factorises across them.
+  # Combinations pay independently, so each can be taken on its own, and within one the
+  # reels are independent, so the expectation factorises across them. A combination's
+  # payout is its value times the arrangements — the product of matching positions on
+  # each reel it covers — so its expectation is the value times the product of the
+  # expected matches per reel.
   #
-  # For a run of exactly L reels paying at length P:
+  # Only the best match per opening matcher pays, or an outcome is counted twice: four
+  # of a kind also matches the three of a kind combination. A shorter combination
+  # therefore pays only when the longer one does not reach, which is the probability
+  # that the next reel offers no match at all.
   #
-  #   E[payout] = pay(P) x (product of E[matches] for the first P reels)
-  #                      x (product of P(match) for reels P+1..L)
-  #                      x P(no match on reel L+1)
-  #
-  # The first product carries the arrangements, since the ways are counted over the
-  # reels forming the combination being paid. The second covers reels that extend the
-  # run past what the paytable prices, which still have to match for the run to reach
-  # that far. The last closes the run.
+  # That reasoning assumes the combinations in a family are prefixes of one another,
+  # which is what N-of-a-kind paytables are. Anything else is checked against brute
+  # force rather than assumed — see the tests.
   class Ways
     def initialize(variation)
       @variation = variation
       @game = variation.game
+      @expected = {}
     end
 
     def expected_payout
-      paytable = variation.paytable_lookup
-
-      game.symbols.reject(&:wild?).sum { |symbol| expected_for(symbol, paytable) }
+      variation.paytable.group_by { |entry| entry.matchers.first&.label }.sum do |_opening, family|
+        expected_for_family(family)
+      end
     end
 
     private
       attr_reader :variation, :game
 
-      def expected_for(symbol, paytable)
-        stats = reel_statistics(symbol)
+      def expected_for_family(family)
+        ordered = family.sort_by(&:length)
 
-        (1..stats.length).sum do |run|
-          paying = WinMechanic.paying_length(symbol, run, paytable)
-          next 0 if paying.nil?
+        ordered.each_with_index.sum do |entry, index|
+          longer = ordered[(index + 1)..].max_by(&:length)
 
-          pay = paytable.dig(symbol, paying) || 0
-          next 0 if pay.zero?
-
-          arrangements = stats.first(paying).map { |reel| reel[:expected] }.reduce(:*)
-          extending = stats[paying...run].map { |reel| reel[:any] }.reduce(1, :*)
-          closes = stats[run] ? stats[run][:none] : Rational(1)
-
-          pay * arrangements * extending * closes
+          entry.payout * arrangements(entry) * unreached(longer, entry.length)
         end
       end
 
-      # Per reel: how many positions match on average, how likely at least one does,
-      # and how likely none does. Taken over the stop positions a reel can rest at.
-      def reel_statistics(symbol)
-        variation.reel_strips.sort_by(&:position).map do |strip|
-          windows = stop_windows(strip)
-          counts = windows.map { |window| window.count { |shown| matches?(shown, symbol) } }
-          total = counts.length
+      # Expected arrangements of a combination: the product across the reels it covers.
+      # Zero-match reels contribute zero, which removes the outcomes it does not win.
+      def arrangements(entry)
+        entry.matchers.each_with_index.reduce(Rational(1)) do |total, (matcher, reel)|
+          total * expected_matches(reel, matcher)
+        end
+      end
 
-          {
-            expected: Rational(counts.sum, total),
-            any: Rational(counts.count(&:positive?), total),
-            none: Rational(counts.count(&:zero?), total)
-          }
+      # The chance the next longer combination in the family fails to reach, which is
+      # the chance its first extra reel offers nothing. One when there is no longer
+      # combination, since nothing can supersede it.
+      def unreached(longer, length)
+        return Rational(1) if longer.nil?
+
+        no_match(length, longer.matchers[length])
+      end
+
+      def expected_matches(reel, matcher)
+        statistics(reel, matcher)[:expected]
+      end
+
+      def no_match(reel, matcher)
+        return Rational(1) if matcher.nil?
+
+        statistics(reel, matcher)[:none]
+      end
+
+      def statistics(reel, matcher)
+        @expected[[ reel, matcher.id ]] ||= begin
+          windows = stop_windows(reel)
+          counts = windows.map { |window| window.count { |shown| matcher.matches?(shown) } }
+
+          { expected: Rational(counts.sum, counts.length), none: Rational(counts.count(&:zero?), counts.length) }
         end
       end
 
       # The rows a reel shows for each position it can stop at, wrapping around.
-      def stop_windows(strip)
-        codes = strip.symbols
-        codes.length.times.map do |stop|
-          game.row_count.times.map { |offset| codes[(stop + offset) % codes.length] }
+      def stop_windows(reel)
+        @windows ||= {}
+        @windows[reel] ||= begin
+          strip = variation.reel_strips.find { |candidate| candidate.position == reel + 1 }
+          by_code = game.symbols.index_by(&:code)
+          codes = strip.symbols
+
+          codes.length.times.map do |stop|
+            game.row_count.times.map { |offset| by_code[codes[(stop + offset) % codes.length]] }
+          end
         end
-      end
-
-      def matches?(code, symbol)
-        shown = game.symbols.find { |candidate| candidate.code == code }
-        return false if shown.nil?
-
-        shown == symbol || (shown.wild? && shown.substitutes_for?(symbol))
       end
   end
 end

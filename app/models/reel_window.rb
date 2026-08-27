@@ -13,9 +13,9 @@ class ReelWindow
     @columns[reel]&.[](@game.offset_from_top(row))
   end
 
-  # How many positions on this reel a symbol could occupy, counting wilds that stand
-  # in for it. This is the multiplicity a ways game multiplies together.
-  def matches_on(reel, symbol)
-    Array(@columns[reel]).count { |shown| shown == symbol || (shown&.wild? && shown.substitutes_for?(symbol)) }
+  # How many positions on this reel satisfy a matcher, counting wilds that stand in.
+  # This is the multiplicity a ways game multiplies together.
+  def matches_for(reel, matcher)
+    Array(@columns[reel]).count { |shown| matcher.matches?(shown) }
   end
 end

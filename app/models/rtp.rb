@@ -72,7 +72,7 @@ class Rtp
       [].tap do |missing|
         missing << "no reel strips" if variation.reel_strips.empty?
         missing << "#{game.reel_count - variation.reel_strips.size} reels have no strip" if variation.reel_strips.any? && variation.reel_strips.size < game.reel_count
-        missing << "no paytable entries" if variation.paytable_entries.empty?
+        missing << "no paytable combinations" if variation.paytable_entries.empty?
         missing << "no paylines" if game.pays_by_lines? && game.paylines.empty?
       end
     end

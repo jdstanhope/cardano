@@ -8,7 +8,7 @@ class RtpTest < ActiveSupport::TestCase
     game = variation.game
     strips = variation.reel_strips.sort_by(&:position)
     mechanic = WinMechanic.for(game)
-    paytable = variation.paytable_lookup
+    entries = variation.paytable
     by_code = game.symbols.index_by(&:code)
 
     stop_counts = strips.map { |strip| strip.symbols.length }
@@ -20,10 +20,18 @@ class RtpTest < ActiveSupport::TestCase
         game.row_count.times.map { |offset| by_code[strip.symbols[(stops[reel] + offset) % strip.symbols.length]] }
       end
 
-      payout += mechanic.wins(ReelWindow.new(game, columns), paytable).sum { |win| win.payout(paytable) }
+      payout += mechanic.wins(ReelWindow.new(game, columns), entries).sum(&:payout)
     end
 
     Rational(payout, total * mechanic.stake_units)
+  end
+
+  # A combination is a sequence of matchers, so N of a kind is one symbol repeated.
+  def create_entry(variation, symbols, payout)
+    entry = variation.paytable_entries.new(payout: payout)
+    symbols.each_with_index { |symbol, index| entry.matchers.build(position: index + 1, game_symbol: symbol) }
+    entry.save!
+    entry
   end
 
   def build_game(user: users(:one), name:, **attributes)
@@ -45,7 +53,7 @@ class RtpTest < ActiveSupport::TestCase
     3.times do |reel|
       variation.reel_strips.create!(position: reel + 1, symbols: [ "7" ] + Array.new(19, "-"))
     end
-    variation.paytable_entries.create!(game_symbol: seven, count: 3, payout: 7500)
+    create_entry(variation, [ seven, seven, seven ], 7500)
 
     result = variation.rtp
 
@@ -68,8 +76,8 @@ class RtpTest < ActiveSupport::TestCase
     variation.reel_strips.create!(position: 1, symbols: %w[ A K K A ])
     variation.reel_strips.create!(position: 2, symbols: %w[ A A K K K ])
     variation.reel_strips.create!(position: 3, symbols: %w[ K A K ])
-    variation.paytable_entries.create!(game_symbol: a, count: 3, payout: 10)
-    variation.paytable_entries.create!(game_symbol: k, count: 2, payout: 3)
+    create_entry(variation, [ a ] * 3, 10)
+    create_entry(variation, [ k ] * 2, 3)
 
     assert_equal brute_force(variation.reload), variation.rtp.value
   end
@@ -83,8 +91,8 @@ class RtpTest < ActiveSupport::TestCase
     variation.reel_strips.create!(position: 1, symbols: %w[ A K K A ])
     variation.reel_strips.create!(position: 2, symbols: %w[ A A K K K ])
     variation.reel_strips.create!(position: 3, symbols: %w[ K A K ])
-    variation.paytable_entries.create!(game_symbol: a, count: 2, payout: 5)
-    variation.paytable_entries.create!(game_symbol: k, count: 3, payout: 8)
+    create_entry(variation, [ a ] * 2, 5)
+    create_entry(variation, [ k ] * 3, 8)
 
     assert_equal brute_force(variation.reload), variation.rtp.value
   end
@@ -100,7 +108,7 @@ class RtpTest < ActiveSupport::TestCase
     variation.reel_strips.create!(position: 1, symbols: %w[ A K W ])
     variation.reel_strips.create!(position: 2, symbols: %w[ A K W K ])
     variation.reel_strips.create!(position: 3, symbols: %w[ A W K ])
-    variation.paytable_entries.create!(game_symbol: a, count: 3, payout: 20)
+    create_entry(variation, [ a ] * 3, 20)
 
     assert_operator variation.rtp.value, :>, 0, "the wild should be creating wins"
     assert_equal brute_force(variation.reload), variation.rtp.value
@@ -116,8 +124,8 @@ class RtpTest < ActiveSupport::TestCase
 
     variation = game.variations.first
     3.times { |reel| variation.reel_strips.create!(position: reel + 1, symbols: %w[ A K W ]) }
-    variation.paytable_entries.create!(game_symbol: a, count: 3, payout: 20)
-    variation.paytable_entries.create!(game_symbol: k, count: 3, payout: 20)
+    create_entry(variation, [ a ] * 3, 20)
+    create_entry(variation, [ k ] * 3, 20)
 
     assert_equal brute_force(variation.reload), variation.rtp.value
   end
@@ -132,7 +140,7 @@ class RtpTest < ActiveSupport::TestCase
 
     variation = game.variations.first
     3.times { |reel| variation.reel_strips.create!(position: reel + 1, symbols: %w[ A K K ]) }
-    variation.paytable_entries.create!(game_symbol: a, count: 3, payout: 27)
+    create_entry(variation, [ a ] * 3, 27)
 
     # One combination in twenty-seven pays twenty-seven, on a one line stake.
     assert_equal Rational(1), variation.rtp.value
@@ -157,7 +165,7 @@ class RtpTest < ActiveSupport::TestCase
 
     variation = game.variations.first
     variation.reel_strips.create!(position: 1, symbols: %w[ A ])
-    variation.paytable_entries.create!(game_symbol: a, count: 3, payout: 5)
+    create_entry(variation, [ a ] * 3, 5)
 
     assert_match(/2 reels have no strip/, variation.rtp.to_s)
   end
