@@ -105,13 +105,15 @@
       <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Paytable</h2>
 
       <p class="mt-3 max-w-xl text-sm leading-relaxed text-slate">
-        What each winning combination pays, in credits per unit of line stake. A blank
-        cell means that combination does not pay.
+        What each winning combination pays, in credits per unit of line stake. Edited in
+        two parts: the same symbol repeated in the grid, everything else below it.
       </p>
 
-      <%# Named in full: PaytablesController and ReelStripsController re-render
-          this template, and a bare name is looked up against the controller. %>
-      <%= render "variations/paytable_statement", variation: @variation %>
+      <h3 class="mt-8 font-mono text-xs font-medium uppercase tracking-[0.18em] text-slate">Same symbol repeated</h3>
+
+      <p class="mt-2 max-w-xl text-sm leading-relaxed text-slate">
+        A blank cell means that combination does not pay.
+      </p>
 
       <%= form_with url: game_variation_paytable_path(@game, @variation), method: :patch, class: "mt-8" do |form| %>
         <div class="overflow-x-auto">
@@ -173,6 +175,12 @@
         <%= form.submit "Save paytable",
               class: "mt-8 cursor-pointer bg-ink px-5 py-3 font-mono text-xs font-medium uppercase tracking-[0.18em] text-paper hover:bg-ink/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
       <% end %>
+
+      <%# Named in full: PaytablesController and ReelStripsController re-render this
+          template, and a bare name is looked up against the controller. %>
+      <div class="mt-12 border-t border-rule pt-8">
+        <%= render "variations/mixed_combinations", variation: @variation %>
+      </div>
     </section>
   <% end %>
 </div>

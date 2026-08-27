@@ -1,0 +1,29 @@
+<%# One select per reel: what this position accepts, or nothing to end the sequence.
+
+    A combination is an ordered sequence, so each position is chosen separately and the
+    order on screen is the order it is matched in. %>
+<%# Codes rather than code-and-name: five of these sit in one row on a five reel game,
+    and the grid directly above spells out what each code is. %>
+<% choices = game.symbols.reject(&:wild?).map { |symbol| [ symbol.code, "symbol:#{symbol.id}" ] } %>
+<% groups = game.symbol_groups.map { |group| [ "any #{group.name}", "group:#{group.id}" ] } %>
+
+<span class="flex flex-wrap items-center gap-1.5">
+  <% (1..game.reel_count).each do |position| %>
+    <% matcher = matchers[position - 1] %>
+    <% selected = matcher && (matcher.symbol_group ? "group:#{matcher.symbol_group_id}" : "symbol:#{matcher.game_symbol_id}") %>
+
+    <select name="sequence[]"
+            aria-label="Position <%= position %>"
+            class="w-28 border border-rule bg-white px-1.5 py-1 font-mono text-xs text-ink focus:border-ink focus:outline-none">
+      <option value=""<%= " selected" if selected.nil? %>>&mdash;</option>
+      <optgroup label="Symbols">
+        <%= options_for_select(choices, selected) %>
+      </optgroup>
+      <% if groups.any? %>
+        <optgroup label="Groups">
+          <%= options_for_select(groups, selected) %>
+        </optgroup>
+      <% end %>
+    </select>
+  <% end %>
+</span>
