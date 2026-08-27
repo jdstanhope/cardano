@@ -1,0 +1,18 @@
+<%# A game somebody can read rather than one they have to describe first. %>
+<div class="<%= wrapper_class %>">
+  <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-slate">Start from a sample</h2>
+
+  <ul class="mt-4 divide-y divide-rule border-t border-rule">
+    <% SampleGame.all.each do |sample| %>
+      <li class="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3 py-5">
+        <div class="max-w-xl text-left">
+          <p class="text-base font-medium text-ink"><%= sample.title %></p>
+          <p class="mt-1 text-sm leading-relaxed text-slate"><%= sample.description %></p>
+        </div>
+
+        <%= button_to "Copy to my games", sample_path(sample.key),
+              class: "shrink-0 border border-ink px-4 py-2 font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+      </li>
+    <% end %>
+  </ul>
+</div>

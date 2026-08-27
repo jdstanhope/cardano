@@ -4,6 +4,7 @@ Rails.application.routes.draw do
 
   # The list of games is the dashboard; there is no separate dashboard concept.
   resources :games, only: %i[ index new create show edit update ] do
+    resource :duplicate, only: :create, controller: "game_duplicates"
     resources :symbols, only: %i[ create update destroy ], controller: "game_symbols"
     resources :symbol_groups, only: %i[ create update destroy ]
     resources :paylines, only: %i[ create destroy ] do
@@ -16,6 +17,9 @@ Rails.application.routes.draw do
       resource :paytable, only: %i[ update ]
     end
   end
+  # Copying a sample creates a game, so it is a POST to the sample rather than a GET.
+  post "/samples/:key", to: "samples#create", as: :sample
+
   resources :passwords, param: :token
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
