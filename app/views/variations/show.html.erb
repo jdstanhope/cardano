@@ -109,6 +109,10 @@
         cell means that combination does not pay.
       </p>
 
+      <%# Named in full: PaytablesController and ReelStripsController re-render
+          this template, and a bare name is looked up against the controller. %>
+      <%= render "variations/paytable_statement", variation: @variation %>
+
       <%= form_with url: game_variation_paytable_path(@game, @variation), method: :patch, class: "mt-8" do |form| %>
         <div class="overflow-x-auto">
           <table class="w-full border-collapse text-sm">

@@ -22,6 +22,16 @@ class PaytableEntry < ApplicationRecord
 
   def length = matchers.size
 
+  # Whether this is the same symbol repeated — the only shape the grid can express.
+  # Everything else has to be read and edited as a sequence.
+  def n_of_a_kind? = repeated_symbol_id.present?
+
+  # The symbol this repeats, or nil if it is anything else.
+  def repeated_symbol_id
+    ids = matchers.map(&:game_symbol_id)
+    ids.first if ids.any? && ids.uniq.length == 1 && matchers.all? { |matcher| matcher.symbol_group_id.nil? }
+  end
+
   # Whether a line of symbols, one per reel from the leftmost, satisfies this
   # combination. A longer line is fine: the combination occupies its opening reels.
   def matches?(symbols_on_line)

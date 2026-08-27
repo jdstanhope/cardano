@@ -50,16 +50,11 @@ class PaytableForm
     # symbol. Anything else a variation holds is left alone by it.
     def existing_entries
       @existing_entries ||= variation.paytable_entries.includes(matchers: :game_symbol).each_with_object({}) do |entry, found|
-        symbol_id = repeated_symbol_id(entry)
+        symbol_id = entry.repeated_symbol_id
         next if symbol_id.nil?
 
         (found[symbol_id] ||= {})[entry.length] = entry.payout
       end
-    end
-
-    def repeated_symbol_id(entry)
-      ids = entry.matchers.map(&:game_symbol_id)
-      ids.first if ids.any? && ids.uniq.length == 1 && entry.matchers.all? { |matcher| matcher.symbol_group_id.nil? }
     end
 
     def payable_symbol_ids = @payable_symbol_ids ||= game.symbols.pluck(:id).to_set
@@ -102,7 +97,7 @@ class PaytableForm
 
     def find_repeated_entry(symbol_id, count)
       variation.paytable_entries.includes(:matchers).find do |entry|
-        entry.length == count && repeated_symbol_id(entry) == symbol_id
+        entry.length == count && entry.repeated_symbol_id == symbol_id
       end
     end
 end
