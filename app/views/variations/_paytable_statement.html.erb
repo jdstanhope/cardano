@@ -1,0 +1,51 @@
+<%# Every combination this variation pays for, in payout order.
+
+    The grid below edits one shape — the same symbol repeated. A combination that
+    mixes symbols, or names a group, has no cell to appear in, so without this the
+    page would show part of a paytable while reporting a figure computed from all of
+    it, with nothing on screen to say so. %>
+<% combinations = variation.paytable.sort_by { |entry| [ -entry.payout, entry.length ] } %>
+
+<div class="mt-8">
+  <h3 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-slate">What this pays</h3>
+
+  <% if combinations.any? %>
+    <table class="mt-4 w-full border-collapse text-sm">
+      <tbody class="divide-y divide-rule border-y border-rule">
+        <% combinations.each do |entry| %>
+          <tr>
+            <td class="py-2.5 pr-4">
+              <span class="flex flex-wrap items-baseline gap-1.5">
+                <% entry.matchers.each do |matcher| %>
+                  <% if matcher.symbol_group %>
+                    <%# A group is an "any of these" position, so it reads differently
+                        from a symbol that must appear exactly. %>
+                    <span class="border border-rule px-1.5 py-0.5 text-xs text-slate" title="any <%= matcher.symbol_group.game_symbols.map(&:code).sort.join(", ") %>">
+                      <%= matcher.symbol_group.name %>
+                    </span>
+                  <% else %>
+                    <span class="font-mono text-base text-ink"><%= matcher.game_symbol.code %></span>
+                  <% end %>
+                <% end %>
+              </span>
+            </td>
+
+            <td class="w-24 py-2.5 text-right font-mono text-base text-ink"><%= number_with_delimiter(entry.payout) %></td>
+
+            <td class="w-32 py-2.5 pl-4 text-right font-mono text-xs uppercase tracking-[0.14em] text-slate">
+              <%= "in the grid" if entry.n_of_a_kind? %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <p class="mt-3 text-xs leading-relaxed text-slate">
+      <%= pluralize(combinations.count, "combination") %>, of which
+      <%= combinations.count(&:n_of_a_kind?) %> can be edited in the grid below. The rest
+      mix symbols or name a group, which the grid has no cell for.
+    </p>
+  <% else %>
+    <p class="mt-4 text-sm text-slate">Nothing pays yet. Fill in the grid below.</p>
+  <% end %>
+</div>
