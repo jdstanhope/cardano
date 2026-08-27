@@ -62,4 +62,20 @@ class VariationsControllerTest < ActionDispatch::IntegrationTest
     get game_variation_url(@game, @variation)
     assert_redirected_to new_session_path
   end
+
+  # Viewing a variation is what computes its figure, so it is also what records one.
+  test "viewing a complete variation records its figure once" do
+    game = SampleGame::RedWhiteAndBlue.build_for(@game.user)
+    variation = game.variations.first
+
+    assert_difference -> { variation.rtp_figures.count }, 1 do
+      get game_variation_url(game, variation)
+    end
+    assert_response :success
+
+    # A second look changes nothing, so it must not record anything either.
+    assert_no_difference -> { variation.rtp_figures.count } do
+      get game_variation_url(game, variation)
+    end
+  end
 end

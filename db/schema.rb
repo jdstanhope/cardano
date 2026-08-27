@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_27_002438) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_27_220557) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -81,6 +81,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_27_002438) do
     t.index ["variation_id"], name: "index_reel_strips_on_variation_id"
   end
 
+  create_table "rtp_figures", force: :cascade do |t|
+    t.string "computed_by", null: false
+    t.datetime "created_at", null: false
+    t.decimal "denominator", null: false
+    t.string "fingerprint", null: false
+    t.decimal "numerator", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "variation_id", null: false
+    t.index ["variation_id", "created_at"], name: "index_rtp_figures_on_variation_id_and_created_at"
+    t.index ["variation_id"], name: "index_rtp_figures_on_variation_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -147,6 +159,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_27_002438) do
   add_foreign_key "paytable_matchers", "paytable_entries", on_delete: :cascade
   add_foreign_key "paytable_matchers", "symbol_groups", on_delete: :cascade
   add_foreign_key "reel_strips", "variations"
+  add_foreign_key "rtp_figures", "variations"
   add_foreign_key "sessions", "users"
   add_foreign_key "symbol_group_memberships", "game_symbols", on_delete: :cascade
   add_foreign_key "symbol_group_memberships", "symbol_groups", on_delete: :cascade
