@@ -5,6 +5,7 @@ class Variation < ApplicationRecord
 
   has_many :reel_strips, -> { order(:position) }, dependent: :destroy
   has_many :paytable_entries, dependent: :destroy
+  has_many :rtp_figures, dependent: :destroy
 
   # Two digits, padded below ten: 01, 02, 99. Stored as an integer and padded for
   # display, so "1" and "01" cannot be different values for the same variation and
@@ -31,6 +32,17 @@ class Variation < ApplicationRecord
   end
 
   def rtp = Rtp.new(self).call
+
+  # Computes the figure and keeps it, so a later change has something to be measured
+  # against. A configuration that has not changed since the last figure records nothing
+  # further; an incomplete description has no figure to record.
+  def record_rtp
+    result = rtp
+    RtpFigure.record(self, result) if result.respond_to?(:exact?)
+    result
+  end
+
+  def latest_rtp_figure = rtp_figures.newest_first.first
 
   def target_rtp_min_percentage = percentage(target_rtp_min)
   def target_rtp_max_percentage = percentage(target_rtp_max)
