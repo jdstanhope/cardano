@@ -240,6 +240,35 @@ A ways game has no paylines and its count follows from the window. Switching a g
 with paylines to ways is refused rather than discarding them — a setting does not
 destroy work as a side effect.
 
+### How the figures are checked
+
+A calculation this central cannot be verified against tests written to match it. Three
+checks are used, and they are independent in different ways.
+
+**Brute force.** Every stop combination walked, payouts totalled, divided by the stake.
+A completely separate route to the same number. It proves the expectation maths, but
+not the rules: it shares the mechanics with the calculation, so a wrong rule would be
+wrong identically in both and they would still agree.
+
+**A trivial published figure.** Three reels of twenty symbols with one combination
+paying 7,500 returns `7500 / 8000`, or 93.75%. That checks the arithmetic against
+something nobody here wrote, but it uses one payline, one combination, no wilds and no
+groups.
+
+**Red White & Blue.** A real machine with published reel strips, a published paytable
+and a published return of 86.58% for one coin. Fifteen overlapping combinations,
+ordered sequences of specific symbols, ordered sequences of groups, a symbol belonging
+to several groups at once, and a blank that pays. This is the only check that exercises
+the *rules* rather than the arithmetic: if best interpretation did not pay exactly
+once, the total would come out wrong rather than raising anything.
+
+It computes 86.5761%, which is 86.58% to the precision published.
+
+That last check also settled something the source did not state. Nothing published says
+which symbols count as red, white or blue; the classic design colours the bars, one bar
+red, two bar white, three bar blue. Under any other reading the total does not land on
+the published figure, so the figure decided the question.
+
 ### Exactness
 
 `Variation` stores its target RTP as **integer basis points** — 9600 is 96.00%. The
