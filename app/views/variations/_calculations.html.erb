@@ -1,0 +1,61 @@
+<%# What has been worked out, and what is being worked out now.
+
+    A run is shown rather than hidden behind a spinner because it has a lifecycle worth
+    seeing: exact evaluation of a five reel game is tens of seconds and a simulation is
+    minutes, so "nothing is happening" and "something is happening" have to be told
+    apart. %>
+<div id="calculations">
+  <% game = variation.game %>
+  <% calculations = variation.calculations.newest_first.limit(8) %>
+
+  <div class="mt-6 flex flex-wrap items-baseline justify-between gap-3 border-t border-rule pt-5">
+    <h3 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-slate">Runs</h3>
+
+    <%= button_to "Run again", game_variation_calculations_path(game, variation),
+          class: "cursor-pointer border border-rule px-2.5 py-1 font-mono text-xs uppercase tracking-[0.14em] text-slate hover:border-ink hover:text-ink" %>
+  </div>
+
+  <% if calculations.any? %>
+    <ol class="mt-3 divide-y divide-rule border-y border-rule text-sm">
+      <% calculations.each do |calculation| %>
+        <li class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-2" data-calculation="<%= calculation.id %>">
+          <span class="flex items-baseline gap-3">
+            <%# The state is in the markup as well as the text: it is rendered
+                uppercase by CSS, and a test should not assert on styling. %>
+            <span data-state="<%= calculation.state %>"
+                  class="font-mono text-xs uppercase tracking-[0.14em] <%= calculation.in_flight? ? "text-signal" : "text-slate" %>">
+              <%= calculation.state %>
+            </span>
+            <span class="font-mono text-xs text-slate"><%= calculation.computed_by %></span>
+          </span>
+
+          <span class="flex items-baseline gap-4 font-mono text-xs text-slate">
+            <% if calculation.done? && calculation.rtp_figure %>
+              <span class="text-base text-ink"><%= calculation.rtp_figure.to_percentage %></span>
+              <%# A run that finished after the description moved on answered a question
+                  nobody is asking any more. %>
+              <% unless calculation.describes_the_variation_now? %>
+                <span class="text-slate/70">for an earlier description</span>
+              <% end %>
+            <% elsif calculation.failed? %>
+              <span class="text-alert"><%= calculation.failure %></span>
+            <% end %>
+
+            <% if calculation.elapsed %>
+              <span><%= calculation.elapsed %>s</span>
+            <% end %>
+
+            <% if calculation.in_flight? %>
+              <%= button_to "Stop", game_variation_calculation_path(game, variation, calculation), method: :delete,
+                    class: "cursor-pointer font-mono text-xs uppercase tracking-[0.14em] text-slate hover:text-alert" %>
+            <% else %>
+              <time datetime="<%= calculation.created_at.iso8601 %>"><%= calculation.created_at.strftime("%d %b %H:%M") %></time>
+            <% end %>
+          </span>
+        </li>
+      <% end %>
+    </ol>
+  <% else %>
+    <p class="mt-3 text-sm text-slate">Nothing worked out yet.</p>
+  <% end %>
+</div>

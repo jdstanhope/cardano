@@ -1,6 +1,8 @@
 require "test_helper"
 
 class VariationsControllerTest < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+
   setup do
     @game = games(:five_by_three)
     @variation = variations(:ninety_six)
@@ -63,19 +65,21 @@ class VariationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
   end
 
-  # Viewing a variation is what computes its figure, so it is also what records one.
+  # Viewing a variation starts a run, and the run is what records a figure.
   test "viewing a complete variation records its figure once" do
     game = SampleGame::RedWhiteAndBlue.build_for(@game.user)
     variation = game.variations.first
 
     assert_difference -> { variation.rtp_figures.count }, 1 do
-      get game_variation_url(game, variation)
+      perform_enqueued_jobs { get game_variation_url(game, variation) }
     end
     assert_response :success
 
-    # A second look changes nothing, so it must not record anything either.
-    assert_no_difference -> { variation.rtp_figures.count } do
-      get game_variation_url(game, variation)
+    # A second look changes nothing, so it must not start a run or record anything.
+    assert_no_difference -> { variation.calculations.count } do
+      assert_no_difference -> { variation.rtp_figures.count } do
+        perform_enqueued_jobs { get game_variation_url(game, variation) }
+      end
     end
   end
 end

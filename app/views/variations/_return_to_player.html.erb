@@ -1,0 +1,77 @@
+<%# Everything known about what this variation returns: the figure, whether it still
+    describes the variation, what the last change did to it, and the runs that produced
+    it.
+
+    One partial because it is one broadcast. When a run finishes, the figure changes as
+    well as the list of runs; replacing only the list would leave a stale number sitting
+    beside a completed run saying otherwise. %>
+<div id="return_to_player">
+  <% missing = variation.missing_for_rtp %>
+  <% figure = variation.latest_rtp_figure %>
+  <% current = variation.rtp_figure_current? %>
+  <% previous = variation.previous_rtp_figure %>
+  <% game = variation.game %>
+
+  <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Return to player</h2>
+
+  <% if missing.any? %>
+    <p class="mt-4 text-sm leading-relaxed text-slate">
+      Not yet: <%= missing.to_sentence %>. A figure computed from a partial description
+      would look like an answer without being one.
+    </p>
+  <% elsif figure.nil? %>
+    <%# A run is already going: the page starts one when it finds nothing current. %>
+    <p class="mt-4 text-sm leading-relaxed text-slate">
+      Working it out. Evaluating an ordinary five reel game exactly takes tens of
+      seconds, so it does not happen while you wait for the page.
+    </p>
+  <% else %>
+    <% standing = figure.to_result.against(variation.target_rtp_min, variation.target_rtp_max) %>
+
+    <p class="mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+      <span class="font-mono text-4xl <%= current ? "text-ink" : "text-slate" %>"><%= figure.to_percentage %></span>
+
+      <% if !current %>
+        <%# A figure for an earlier description is the last thing known, and showing it
+            as though it described this one would present a wrong number as authority. %>
+        <span class="font-mono text-xs uppercase tracking-[0.18em] text-alert">out of date</span>
+        <span class="font-mono text-xs text-slate">the description has changed since</span>
+      <% elsif standing %>
+        <span class="font-mono text-xs uppercase tracking-[0.18em] <%= standing == :inside ? "text-signal" : "text-alert" %>">
+          <%= { inside: "in band", below: "below band", above: "above band" }[standing] %>
+        </span>
+        <span class="font-mono text-xs text-slate">
+          target <%= variation.target_rtp_min_percentage %>&ndash;<%= variation.target_rtp_max_percentage %>
+        </span>
+      <% else %>
+        <span class="font-mono text-xs text-slate">no target set</span>
+      <% end %>
+    </p>
+
+    <p class="mt-2 font-mono text-xs text-slate">
+      <%# The method is shown because it will not always be the same one. %>
+      <%= figure.exact? ? "Exact · computed from every outcome, not sampled" : "Sampled" %> &middot;
+      <%= game.pays_by_ways? ? "#{number_with_delimiter game.ways_count} ways" : "#{game.paylines.size} paylines" %>
+    </p>
+
+    <%# Tuning is the activity of making a change and seeing what it did, so the figure
+        before the last change is worth as much as the current one.
+
+        Only while the figure is current. Beside an out of date figure this would read
+        as the effect of the edit just made, which is precisely the thing not yet
+        known. %>
+    <% if current && previous %>
+      <p class="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-l-2 border-rule pl-4 text-sm">
+        <span class="text-slate">was <span class="font-mono text-ink"><%= previous.to_percentage %></span> before your last change</span>
+        <%# Deliberately not coloured by direction. Lowering the return is often the
+            intention, and the band above already says whether the figure is where it
+            should be; tinting a fall red would call a change wrong for moving down. %>
+        <span class="font-mono text-xs text-ink"><%= "%+.2f points" % figure.points_from(previous) %></span>
+      </p>
+    <% end %>
+
+    <%= render "variations/rtp_history", history: variation.rtp_history %>
+  <% end %>
+
+  <%= render "variations/calculations", variation: variation %>
+</div>

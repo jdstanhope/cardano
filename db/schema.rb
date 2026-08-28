@@ -10,9 +10,26 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_27_220557) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_27_232858) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "calculations", force: :cascade do |t|
+    t.string "computed_by", null: false
+    t.datetime "created_at", null: false
+    t.string "failure"
+    t.string "fingerprint", null: false
+    t.datetime "finished_at"
+    t.bigint "rtp_figure_id"
+    t.datetime "started_at"
+    t.string "state", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "variation_id", null: false
+    t.index ["rtp_figure_id"], name: "index_calculations_on_rtp_figure_id"
+    t.index ["variation_id", "created_at"], name: "index_calculations_on_variation_id_and_created_at"
+    t.index ["variation_id", "state"], name: "index_calculations_on_variation_id_and_state"
+    t.index ["variation_id"], name: "index_calculations_on_variation_id"
+  end
 
   create_table "game_symbols", force: :cascade do |t|
     t.string "code", null: false
@@ -151,6 +168,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_27_220557) do
     t.index ["wild_id"], name: "index_wild_exclusions_on_wild_id"
   end
 
+  add_foreign_key "calculations", "rtp_figures"
+  add_foreign_key "calculations", "variations"
   add_foreign_key "game_symbols", "games"
   add_foreign_key "games", "users"
   add_foreign_key "paylines", "games"

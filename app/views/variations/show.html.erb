@@ -15,52 +15,8 @@
   </div>
 
   <section data-rtp class="border-b border-rule py-10">
-    <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Return to player</h2>
-
-    <% if @rtp.respond_to?(:complete?) && !@rtp.complete? %>
-      <p class="mt-4 text-sm leading-relaxed text-slate">
-        Not yet: <%= @rtp %>. A figure computed from a partial description would look
-        like an answer without being one.
-      </p>
-    <% else %>
-      <% standing = @rtp.against(@variation.target_rtp_min, @variation.target_rtp_max) %>
-
-      <p class="mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <span class="font-mono text-4xl text-ink"><%= @rtp.to_percentage %></span>
-
-        <% if standing %>
-          <span class="font-mono text-xs uppercase tracking-[0.18em] <%= standing == :inside ? "text-signal" : "text-alert" %>">
-            <%= { inside: "in band", below: "below band", above: "above band" }[standing] %>
-          </span>
-          <span class="font-mono text-xs text-slate">
-            target <%= @variation.target_rtp_min_percentage %>&ndash;<%= @variation.target_rtp_max_percentage %>
-          </span>
-        <% else %>
-          <span class="font-mono text-xs text-slate">no target set</span>
-        <% end %>
-      </p>
-
-      <p class="mt-2 font-mono text-xs text-slate">
-        <%# The method is shown because it will not always be the same one. %>
-        Exact &middot; computed from every outcome, not sampled &middot;
-        <%= @variation.game.pays_by_ways? ? "#{number_with_delimiter @variation.game.ways_count} ways" : "#{@variation.game.paylines.size} paylines" %>
-      </p>
-
-      <%# Tuning is the activity of making a change and seeing what it did, so the
-          figure before the last change is worth as much as the current one. %>
-      <% if @previous %>
-        <% points = @variation.latest_rtp_figure.points_from(@previous) %>
-        <p class="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-l-2 border-rule pl-4 text-sm">
-          <span class="text-slate">was <span class="font-mono text-ink"><%= @previous.to_percentage %></span> before your last change</span>
-          <%# Deliberately not coloured by direction. Lowering the return is often the
-              intention, and the band above already says whether the figure is where it
-              should be; tinting a fall red would call a change wrong for moving down. %>
-          <span class="font-mono text-xs text-ink"><%= "%+.2f points" % points %></span>
-        </p>
-      <% end %>
-
-      <%= render "variations/rtp_history", history: @history %>
-    <% end %>
+    <%= turbo_stream_from @variation %>
+    <%= render "variations/return_to_player", variation: @variation %>
   </section>
 
   <section class="py-10">
