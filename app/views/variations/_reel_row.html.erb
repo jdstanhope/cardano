@@ -3,7 +3,7 @@
     imply a relationship that does not exist. %>
 <%# The same grid template as the column header, so the header centres over the inputs
     rather than over the number gutter beside them. %>
-<div data-reel-target="row" class="group grid grid-cols-[1.5rem_1fr_1rem] items-center gap-1.5">
+<div data-reel-target="row" class="group grid grid-cols-[1.5rem_1fr_2.25rem] items-center gap-1.5">
   <span data-stop-number class="text-right font-mono text-xs text-slate/70"><%= number %></span>
 
   <input type="text"
@@ -17,10 +17,23 @@
          aria-label="Reel <%= position %> stop <%= number %>"
          class="min-w-0 border <%= error ? "border-alert" : "border-rule" %> bg-white px-2 py-1 text-center font-mono text-sm text-ink focus:border-ink focus:outline-none">
 
-  <%# Only on the row being worked on. A control per row is discoverable; a hundred and
-      sixty of them on screen at once is noise. %>
-  <button type="button"
-          data-action="reel#removeRow"
-          aria-label="Remove reel <%= position %> stop <%= number %>"
-          class="cursor-pointer font-mono text-xs text-slate opacity-0 transition-opacity hover:text-alert focus:opacity-100 group-focus-within:opacity-100 group-hover:opacity-100">&times;</button>
+  <%# Only on the row being worked on. A control per row is discoverable; hundreds of
+      them on screen at once is noise. %>
+  <span class="flex items-center justify-end gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+    <%# Inserts above, the way a spreadsheet does. Appending is already Enter at the
+        bottom, and inserting above is the only way to put a stop before the first. %>
+    <button type="button"
+            data-insert
+            data-action="reel#insertRow"
+            title="Insert a stop here"
+            aria-label="Insert a stop above reel <%= position %> stop <%= number %>"
+            class="cursor-pointer px-0.5 font-mono text-xs text-slate hover:text-ink focus:opacity-100">+</button>
+
+    <button type="button"
+            data-remove
+            data-action="reel#removeRow"
+            title="Remove this stop"
+            aria-label="Remove reel <%= position %> stop <%= number %>"
+            class="cursor-pointer px-0.5 font-mono text-xs text-slate hover:text-alert focus:opacity-100">&times;</button>
+  </span>
 </div>

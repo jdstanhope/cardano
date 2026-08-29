@@ -26,11 +26,11 @@ class ReelStripsTest < ApplicationSystemTestCase
     stop(3, 2).send_keys(:enter)
     stop(3, 3).set("K")
 
-    within column(3) do
-      assert_text "3 stops"
-      assert_text "K 2"
-      assert_text "A 1"
-    end
+    within(column(3)) { assert_text "3 stops" }
+
+    # A column, most frequent first, with the counts aligned under one another: the
+    # tally is read by comparing numbers down it.
+    assert_equal [ "K  2", "A  1" ], column(3).find("[data-reel-target='counts']").text.split("\n")
   end
 
   # Typing straight down a column without reaching for the mouse is the point.
@@ -109,6 +109,38 @@ class ReelStripsTest < ApplicationSystemTestCase
     assert_text "ZZ is not a symbol in this game"
     # A rejected save must not throw away what was typed.
     assert_equal "ZZ", stop(2, 1).value
+  end
+
+
+  # Tuning a strip is mostly inserting, not appending: a stop added at 14 pushes
+  # everything below it down.
+  test "shift-enter inserts a stop above the one you are on" do
+    stop(1, 3).send_keys([ :shift, :enter ])
+
+    assert_equal "Reel 1 stop 3", focused, "the new stop takes the number it was inserted at"
+    assert_equal [ "A", "K", "", "Q", "K", "Q", "Q" ], values(1)
+
+    page.driver.browser.action.send_keys("J").perform
+    assert_equal %w[ A K J Q K Q Q ], values(1)
+  end
+
+  test "a stop can be inserted with its own control" do
+    stop(1, 1).click
+    find("[aria-label='Insert a stop above reel 1 stop 1']").click
+
+    # Above, so a stop can be put before the first one — which appending cannot do.
+    assert_equal [ "", "A", "K", "Q", "K", "Q", "Q" ], values(1)
+    assert_equal "Reel 1 stop 1", focused
+  end
+
+  test "an inserted stop is saved in its place" do
+    stop(1, 3).send_keys([ :shift, :enter ])
+    page.driver.browser.action.send_keys("J").perform
+
+    click_on "Save reels"
+
+    assert_text "Reels saved"
+    assert_equal %w[ A K J Q K Q Q ], @variation.reel_strips.find_by(position: 1).symbols
   end
 
   private
