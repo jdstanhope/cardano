@@ -46,13 +46,20 @@
             <% codes = @form.codes_for(position) %>
             <% error = @form.error_for(position) %>
 
-            <div data-controller="reel" data-reel-position-value="<%= position %>" class="w-28 shrink-0">
+            <div data-controller="reel" data-reel-position-value="<%= position %>" class="w-32 shrink-0">
               <%# Sticky: a sixty-four stop reel is taller than the window, and losing
                   track of which column you are typing into is the obvious way to ruin
                   a strip. %>
-              <div class="sticky top-0 z-10 flex items-baseline justify-between gap-2 bg-paper py-2">
-                <span class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Reel <%= position %></span>
-                <span data-reel-target="stops" class="font-mono text-xs text-slate"></span>
+              <%# Two lines, centred over the column of stops. The same grid template as
+                  a row, so the empty first cell carries the title past the number
+                  gutter rather than centring it over the lot. %>
+              <div class="sticky top-0 z-10 grid grid-cols-[1.5rem_1fr_1rem] gap-1.5 bg-paper py-2">
+                <span></span>
+                <span class="text-center">
+                  <span class="block font-mono text-xs font-medium uppercase tracking-[0.14em] text-ink">Reel <%= position %></span>
+                  <span data-reel-target="stops" class="mt-0.5 block font-mono text-xs text-slate"></span>
+                </span>
+                <span></span>
               </div>
 
               <div data-reel-target="rows" class="mt-2 space-y-1">
