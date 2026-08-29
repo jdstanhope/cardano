@@ -10,9 +10,12 @@ class ReelStripsForm
 
   attr_reader :variation, :submitted, :errors_by_position
 
+  # A reel arrives as one value per stop, since each stop is its own input. Older
+  # callers passing the whole strip as one string still work: either way what is being
+  # described is an ordered list of codes, and joining is the only difference.
   def initialize(variation:, reels: {})
     @variation = variation
-    @submitted = (reels || {}).to_h { |position, text| [ position.to_i, text.to_s ] }
+    @submitted = (reels || {}).to_h { |position, value| [ position.to_i, join(value) ] }
     @errors_by_position = {}
   end
 
@@ -35,8 +38,13 @@ class ReelStripsForm
     submitted[position] || variation.reel_strips.find { |strip| strip.position == position }&.symbols&.join(" ") || ""
   end
 
+  # One code per stop, in order, for the column of inputs.
+  def codes_for(position) = text_for(position).split(SEPARATORS).reject(&:blank?)
+
   private
     def game = variation.game
+
+    def join(value) = value.is_a?(Array) ? value.map(&:to_s).join(" ") : value.to_s
 
     def resolve_every_reel
       submitted.each_with_object({}) do |(position, text), resolved|

@@ -34,34 +34,77 @@
         Symbols: <%= @game.symbols.order(:position).map(&:code).join("  ") %>
       </p>
 
-      <%= form_with url: game_variation_reel_strips_path(@game, @variation), method: :patch, class: "mt-8 space-y-8" do |form| %>
-        <% (1..@game.reel_count).each do |position| %>
-          <div data-controller="reel-count">
-            <div class="flex items-baseline justify-between gap-4">
-              <label for="reel_<%= position %>" class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">
-                Reel <%= position %>
-              </label>
-              <span data-reel-count-target="stops" class="font-mono text-xs text-slate"></span>
+      <%= form_with url: game_variation_reel_strips_path(@game, @variation), method: :patch, class: "mt-8" do |form| %>
+        <%# Reels side by side, each a column of stops. A reel is a vertical strip and
+            the window shows consecutive stops stacked, so laying them out horizontally
+            made the thing on screen look nothing like the thing described.
+
+            Columns are independent and need not be the same height: reels may differ in
+            length, and a ragged bottom edge is the truth about that. %>
+        <%# Side by side and never wrapped: a wrapped reel 5 sits sixty-four rows below
+            reel 1, which is worse than scrolling sideways to reach it. %>
+        <div class="flex gap-x-6 overflow-x-auto pb-2">
+          <% (1..@game.reel_count).each do |position| %>
+            <% codes = @form.codes_for(position) %>
+            <% error = @form.error_for(position) %>
+
+            <div data-controller="reel" data-reel-position-value="<%= position %>" class="w-36 shrink-0">
+              <%# Sticky: a sixty-four stop reel is taller than the window, and losing
+                  track of which column you are typing into is the obvious way to ruin
+                  a strip. %>
+              <%# Two lines, centred over the column of stops. The same grid template as
+                  a row, so the empty first cell carries the title past the number
+                  gutter rather than centring it over the lot. %>
+              <div class="sticky top-0 z-10 grid grid-cols-[1.5rem_1fr_2.25rem] gap-1.5 bg-paper py-2">
+                <span></span>
+                <span class="text-center">
+                  <span class="block font-mono text-xs font-medium uppercase tracking-[0.14em] text-ink">Reel <%= position %></span>
+                  <span data-reel-target="stops" class="mt-0.5 block font-mono text-xs text-slate"></span>
+                </span>
+                <span></span>
+              </div>
+
+              <div data-reel-target="rows" class="mt-2 space-y-1">
+                <% codes.each_with_index do |code, index| %>
+                  <%= render "variations/reel_row", position: position, number: index + 1, code: code, error: error %>
+                <% end %>
+
+                <%# A reel with nothing on it still needs somewhere to start typing. %>
+                <% if codes.empty? %>
+                  <%= render "variations/reel_row", position: position, number: 1, code: "", error: error %>
+                <% end %>
+              </div>
+
+              <%# Cloned by the controller when a stop is added. Rendered with a
+                  placeholder number, which renumber() corrects on insertion. %>
+              <template data-reel-target="template"><%= render "variations/reel_row", position: position, number: 0, code: "", error: false %></template>
+
+              <button type="button" data-action="reel#addStop" data-add-stop
+                      class="mt-2 w-full cursor-pointer border border-rule px-2 py-1 font-mono text-xs uppercase tracking-[0.14em] text-slate hover:border-ink hover:text-ink">
+                Add stop
+              </button>
+
+              <% if error %>
+                <p data-reel-error="<%= position %>" class="mt-1.5 text-sm text-alert"><%= error %></p>
+              <% end %>
+
+              <%# whitespace-pre so the padded alignment survives: HTML collapses runs
+                  of spaces and would undo it. %>
+              <p data-reel-target="counts" class="mt-3 whitespace-pre pl-[1.875rem] font-mono text-xs leading-relaxed text-slate"></p>
             </div>
+          <% end %>
+        </div>
 
-            <textarea id="reel_<%= position %>"
-                      name="reels[<%= position %>]"
-                      rows="3"
-                      spellcheck="false"
-                      data-reel-count-target="input"
-                      data-action="input->reel-count#recount"
-                      class="mt-2 block w-full border <%= @form.error_for(position) ? "border-alert" : "border-rule" %> bg-white px-3 py-2.5 font-mono text-sm leading-relaxed text-ink focus:border-ink focus:outline-none"><%= @form.text_for(position) %></textarea>
-
-            <% if message = @form.error_for(position) %>
-              <p data-reel-error="<%= position %>" class="mt-1.5 text-sm text-alert"><%= message %></p>
-            <% end %>
-
-            <p data-reel-count-target="counts" class="mt-1.5 font-mono text-xs text-slate"></p>
-          </div>
-        <% end %>
+        <p class="mt-6 font-mono text-xs leading-relaxed text-slate">
+          Enter or Tab moves down the column, and Enter on the last stop adds one.
+          Shift+Enter inserts a stop above the one you are on, and Backspace on an empty
+          stop removes it &mdash; or use the <span class="text-ink">+</span> and
+          <span class="text-ink">&times;</span> on the row. Pasting a column of codes
+          fills downwards.
+        </p>
 
         <%= form.submit "Save reels",
-              class: "cursor-pointer bg-ink px-5 py-3 font-mono text-xs font-medium uppercase tracking-[0.18em] text-paper hover:bg-ink/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+              class: "mt-4 cursor-pointer bg-ink px-5 py-3 font-mono text-xs font-medium uppercase tracking-[0.18em] text-paper hover:bg-ink/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
       <% end %>
     <% else %>
       <p class="mt-4 text-sm text-slate">

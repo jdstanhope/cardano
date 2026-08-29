@@ -16,7 +16,12 @@ class ReelStripsController < ApplicationController
   private
     # Only the reels this game actually has. A request naming reel 99 on a five reel
     # game is ignored rather than creating a strip that could never be shown.
+    #
+    # Each reel arrives as an array, one value per stop. A bare string is still
+    # accepted, so a whole strip pasted as one value works the way it always did.
     def submitted_reels
-      params.fetch(:reels, {}).permit(*(1..@game.reel_count).map(&:to_s))
+      permitted = (1..@game.reel_count).to_h { |position| [ position.to_s, [] ] }
+
+      params.fetch(:reels, {}).permit(permitted, *permitted.keys)
     end
 end
