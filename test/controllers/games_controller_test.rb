@@ -37,13 +37,32 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
   end
 
-  test "shows a game with its symbols, paylines, and variations" do
+  test "shows a game with its symbols, groups, paylines, and variations" do
     get game_url(@game)
 
     assert_response :success
     assert_select "[data-symbols]", /A/
-    assert_select "[data-paylines] [data-payline]", @game.paylines.count
+    assert_select "[data-symbol-groups]"
     assert_select "[data-variations]", /#{variations(:ninety_six).label}/
+  end
+
+  # The shapes themselves are a page of their own; the game page counts them and
+  # points at it, the way it does for a variation.
+  test "the game page counts its paylines and links to them" do
+    get game_url(@game)
+
+    assert_select "[data-paylines]", /#{@game.paylines.count} lines/
+    assert_select "[data-paylines] a[href=?]", game_paylines_path(@game)
+    assert_select "[data-paylines] [data-payline]", 0, "the shapes belong on the paylines page"
+  end
+
+  # The control that adds a symbol belongs with the symbols, not below two other
+  # things that have nothing to do with adding one.
+  test "the control for adding a symbol is inside the symbols section" do
+    get game_url(@game)
+
+    assert_select "[data-symbols] form[action=?]", game_symbols_path(@game)
+    assert_select "[data-symbol-groups] form[action=?]", game_symbols_path(@game), 0
   end
 
   test "creates a game and opens it" do

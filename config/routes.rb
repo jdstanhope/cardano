@@ -7,7 +7,7 @@ Rails.application.routes.draw do
     resource :duplicate, only: :create, controller: "game_duplicates"
     resources :symbols, only: %i[ create update destroy ], controller: "game_symbols"
     resources :symbol_groups, only: %i[ create update destroy ]
-    resources :paylines, only: %i[ create destroy ] do
+    resources :paylines, only: %i[ index create destroy ] do
       # Applying a set replaces every payline, which is not what creating one means.
       collection { post :apply_set }
     end
