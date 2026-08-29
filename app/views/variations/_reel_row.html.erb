@@ -1,0 +1,24 @@
+<%# One stop. The number is the reel's own — reels stop independently, so stop 7 of one
+    has nothing to do with stop 7 of another, and a shared gutter across columns would
+    imply a relationship that does not exist. %>
+<div data-reel-target="row" class="group flex items-center gap-1.5">
+  <span data-stop-number class="w-6 shrink-0 text-right font-mono text-xs text-slate/70"><%= number %></span>
+
+  <input type="text"
+         name="reels[<%= position %>][]"
+         value="<%= code %>"
+         size="4"
+         spellcheck="false"
+         autocomplete="off"
+         data-reel-target="input"
+         data-action="keydown->reel#key paste->reel#paste input->reel#recount"
+         aria-label="Reel <%= position %> stop <%= number %>"
+         class="w-full min-w-0 border <%= error ? "border-alert" : "border-rule" %> bg-white px-2 py-1 text-center font-mono text-sm text-ink focus:border-ink focus:outline-none">
+
+  <%# Only on the row being worked on. A control per row is discoverable; a hundred and
+      sixty of them on screen at once is noise. %>
+  <button type="button"
+          data-action="reel#removeRow"
+          aria-label="Remove reel <%= position %> stop <%= number %>"
+          class="shrink-0 cursor-pointer px-1 font-mono text-xs text-slate opacity-0 transition-opacity hover:text-alert focus:opacity-100 group-focus-within:opacity-100 group-hover:opacity-100">&times;</button>
+</div>

@@ -9,19 +9,39 @@ class VariationsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as @game.user
   end
 
-  test "shows a variation with a text area per reel" do
+  test "shows a column of stops per reel" do
     get game_variation_url(@game, @variation)
 
     assert_response :success
-    assert_select "textarea[name=?]", "reels[1]"
-    assert_select "textarea", @game.reel_count,
-      "one text area per reel, whether or not a strip exists yet"
+    assert_select "[data-controller=reel]", @game.reel_count,
+      "one column per reel, whether or not a strip exists yet"
   end
 
-  test "pre-fills the strips that already exist" do
+  # One input per stop, in order: the column is the strip.
+  test "pre-fills the strips that already exist, one stop per input" do
+    strip = reel_strips(:reel_one)
+
     get game_variation_url(@game, @variation)
 
-    assert_select "textarea[name=?]", "reels[1]", text: /#{reel_strips(:reel_one).symbols.join(" ")}/
+    # Scoped to the rows: the cloning template holds a blank row too, which a browser
+    # treats as inert but a parser does not.
+    inputs = css_select("[data-reel-target=rows] input[name='reels[1][]']").map { |input| input["value"] }
+    assert_equal strip.symbols, inputs
+  end
+
+  test "a reel with no strip yet still offers somewhere to start" do
+    empty = @game.reel_count
+
+    get game_variation_url(@game, @variation)
+
+    assert_select "[data-reel-target=rows] input[name=?]", "reels[#{empty}][]", 1
+  end
+
+  test "every stop is labelled for a screen reader" do
+    get game_variation_url(@game, @variation)
+
+    assert_select "[data-reel-target=rows] input[aria-label=?]", "Reel 1 stop 1"
+    assert_select "[data-reel-target=rows] input[aria-label=?]", "Reel 1 stop 6"
   end
 
   test "adds a variation and opens it" do
