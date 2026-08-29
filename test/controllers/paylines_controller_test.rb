@@ -7,7 +7,7 @@ class PaylinesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "the game page offers the sets its window has" do
-    get game_url(@game)
+    get game_paylines_url(@game)
 
     assert_response :success
     assert_select "[data-payline-sets] button", text: /9 lines/
@@ -20,7 +20,7 @@ class PaylinesControllerTest < ActionDispatch::IntegrationTest
       post apply_set_game_paylines_url(@game), params: { size: 9 }
     end
 
-    assert_redirected_to game_url(@game)
+    assert_redirected_to game_paylines_url(@game)
     assert_equal (1..9).to_a, @game.paylines.reload.order(:position).map(&:position)
     assert_equal [ 0, 0, 0, 0, 0 ], @game.paylines.order(:position).first.rows
   end
@@ -44,7 +44,7 @@ class PaylinesControllerTest < ActionDispatch::IntegrationTest
       post apply_set_game_paylines_url(@game), params: { size: 7 }
     end
 
-    assert_redirected_to game_url(@game)
+    assert_redirected_to game_paylines_url(@game)
   end
 
   test "a single line can be removed to make a subset" do
@@ -56,7 +56,7 @@ class PaylinesControllerTest < ActionDispatch::IntegrationTest
       delete game_payline_url(@game, removing)
     end
 
-    assert_redirected_to game_url(@game)
+    assert_redirected_to game_paylines_url(@game)
   end
 
   test "a line can be added to a game that already has paylines" do
@@ -100,7 +100,7 @@ class PaylinesControllerTest < ActionDispatch::IntegrationTest
     @game.paylines.destroy_all
     post apply_set_game_paylines_url(@game), params: { size: 5 }
 
-    get game_url(@game)
+    get game_paylines_url(@game)
 
     in_use = @game.paylines.reload.map(&:rows)
     assert_select "[data-payline-picker] form" do |forms|
@@ -131,5 +131,23 @@ class PaylinesControllerTest < ActionDispatch::IntegrationTest
 
     post apply_set_game_paylines_url(@game), params: { size: 5 }
     assert_redirected_to new_session_path
+  end
+
+  # A ways game has no paylines to edit, so there is nothing on this page for it.
+  test "a ways game is sent back to itself" do
+    ways = users(:one).games.create!(name: "Ways Only", reel_count: 5, row_count: 3, win_mechanic: "ways")
+
+    get game_paylines_url(ways)
+
+    assert_redirected_to game_url(ways)
+  end
+
+  test "another person's paylines are not found" do
+    theirs = games(:other_game)
+    assert_not_equal theirs.user, @game.user
+
+    get game_paylines_url(theirs)
+
+    assert_response :not_found
   end
 end
