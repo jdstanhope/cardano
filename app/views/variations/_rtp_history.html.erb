@@ -28,6 +28,13 @@
                 <span class="text-slate/60">&mdash;</span>
               <% end %>
               <time datetime="<%= figure.created_at.iso8601 %>"><%= figure.created_at.strftime("%d %b %H:%M") %></time>
+
+              <%# Restoring appends rather than rewrites, so every row stays reachable
+                  however far back it is. %>
+              <% if figure.inputs.present? %>
+                <%= link_to "Restore", new_game_variation_figure_restoration_path(figure.variation.game, figure.variation, figure),
+                      class: "uppercase tracking-[0.14em] text-slate hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+              <% end %>
             </span>
           </div>
 
