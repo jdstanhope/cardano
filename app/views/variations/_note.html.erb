@@ -1,0 +1,22 @@
+<%# What this variation is for. Written by branching to say where it came from, and
+    the designer's to change: a variation exists for a reason the tool cannot know. %>
+<div data-note class="mt-4">
+  <% if variation.note.present? %>
+    <p class="max-w-xl text-sm leading-relaxed text-slate"><%= variation.note %></p>
+  <% end %>
+
+  <details class="mt-2">
+    <summary data-note-toggle class="cursor-pointer font-mono text-xs uppercase tracking-[0.14em] text-slate hover:text-ink">
+      <%= variation.note.present? ? "Edit note" : "Add a note" %>
+    </summary>
+
+    <%= form_with model: variation, url: game_variation_path(variation.game, variation), method: :patch, class: "mt-3 max-w-xl" do |form| %>
+      <%= form.label :note, "What this variation is for", class: "block font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink" %>
+      <%= form.text_area :note, rows: 3,
+            class: "mt-2 block w-full border border-rule bg-white px-3 py-2 text-sm leading-relaxed text-ink focus:border-ink focus:outline-none" %>
+
+      <%= form.submit "Save note",
+            class: "mt-3 cursor-pointer border border-ink px-4 py-2 font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+    <% end %>
+  </details>
+</div>

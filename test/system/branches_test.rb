@@ -29,7 +29,7 @@ class BranchesTest < ApplicationSystemTestCase
     Calculation.start(@variation.reload).perform
 
     visit game_variation_path(@game, @variation)
-    find("summary").click
+    find("[data-history-toggle]").click
     within("[data-figure='#{checkpoint.id}']") { click_on "Branch" }
 
     assert_selector "h1", text: "Variation 02"
@@ -37,5 +37,25 @@ class BranchesTest < ApplicationSystemTestCase
 
     assert_equal 2400, @game.variations.find_by(number: 2).paytable.find { |entry| entry.sequence == %w[ R7 W7 B7 ] }.payout
     assert_equal 9, @variation.reload.paytable.find { |entry| entry.sequence == %w[ R7 W7 B7 ] }.payout
+  end
+
+  # A variation should be able to account for itself a week later, when the flash
+  # message that explained it is long gone.
+  test "a branched variation says where it came from, and the note can be rewritten" do
+    visit game_variation_path(@game, @variation)
+    click_on "Copy to a new variation"
+
+    assert_selector "[data-note]", text: "Branched from variation 01."
+
+    find("[data-note-toggle]").click
+    fill_in "What this variation is for", with: "Trying a shorter reel 2."
+    click_on "Save note"
+
+    assert_text "Note saved"
+    assert_selector "[data-note]", text: "Trying a shorter reel 2."
+
+    # And it is on the game page, which is where you go looking.
+    click_on @game.name
+    assert_selector "[data-variation-note]", text: "Trying a shorter reel 2."
   end
 end

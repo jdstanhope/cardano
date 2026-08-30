@@ -37,7 +37,7 @@ class RestorationsTest < ApplicationSystemTestCase
   private
     def restore(figure)
       visit game_variation_path(@game, @variation)
-      find("summary").click
+      find("[data-history-toggle]").click
       within("[data-figure='#{figure.id}']") { click_on "Restore" }
     end
 

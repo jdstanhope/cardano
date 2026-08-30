@@ -41,11 +41,23 @@ class VariationBranch
     Variation.transaction do
       branch = game.variations.create!(number: game.next_variation_number,
                                        target_rtp_min: source.target_rtp_min,
-                                       target_rtp_max: source.target_rtp_max)
+                                       target_rtp_max: source.target_rtp_max,
+                                       note: origin)
 
       ConfigurationRestore.new(configuration, into: branch).call
 
       branch
+    end
+  end
+
+  # Where this came from, written once so a variation can account for itself later.
+  # Editable afterwards: what a variation is actually for is something only the person
+  # designing it knows, and this is their field.
+  def origin
+    if figure
+      "Branched from variation #{source.label}, as it was on #{figure.created_at.strftime("%d %b %Y at %H:%M")}."
+    else
+      "Branched from variation #{source.label}."
     end
   end
 

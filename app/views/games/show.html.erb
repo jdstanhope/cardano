@@ -237,7 +237,8 @@
     <% if @game.variations.any? %>
       <ul class="mt-4 divide-y divide-rule border-y border-rule">
         <% @game.variations.each do |variation| %>
-          <li class="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1 py-3">
+          <li class="py-3">
+            <div class="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1">
             <%= link_to variation.label, [ @game, variation ],
                   class: "font-mono text-ink underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
 
@@ -250,6 +251,13 @@
               &middot; <%= variation.reel_strips.size %>/<%= @game.reel_count %> strips
               &middot; <%= variation.paytable_entries.size %> paytable entries
             </span>
+            </div>
+
+            <%# Where you go looking when a game holds 01, 02 and 07 and you cannot
+                remember which is which. %>
+            <% if variation.note.present? %>
+              <p data-variation-note class="mt-1 max-w-xl text-sm leading-relaxed text-slate"><%= variation.note %></p>
+            <% end %>
           </li>
         <% end %>
       </ul>

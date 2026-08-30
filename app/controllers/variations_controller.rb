@@ -10,6 +10,16 @@ class VariationsController < ApplicationController
     Calculation.start(@variation) if @variation.calculation_wanted?
   end
 
+  # The note only. Everything else about a variation is its configuration, which is
+  # edited through the reels and the paytable.
+  def update
+    variation = self.variation
+
+    variation.update!(note: params.expect(variation: [ :note ])[:note])
+
+    redirect_to [ variation.game, variation ], notice: "Note saved."
+  end
+
   def create
     game = Current.user.games.find(params[:game_id])
     number = game.next_variation_number

@@ -12,7 +12,7 @@ Rails.application.routes.draw do
       collection { post :apply_set }
     end
 
-    resources :variations, only: %i[ show create ] do
+    resources :variations, only: %i[ show create update ] do
       resource :reel_strips, only: %i[ update ]
       resource :paytable, only: %i[ update ]
       resources :combinations, only: %i[ create update destroy ], controller: "paytable_combinations"
