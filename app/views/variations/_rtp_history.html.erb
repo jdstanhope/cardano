@@ -34,6 +34,12 @@
               <% if figure.inputs.present? %>
                 <%= link_to "Restore", new_game_variation_figure_restoration_path(figure.variation.game, figure.variation, figure),
                       class: "uppercase tracking-[0.14em] text-slate hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+
+                <%# Keeping a configuration rather than returning to it: the same
+                    machinery, writing a new variation instead of this one. %>
+                <%= button_to "Branch", game_variation_figure_branch_path(figure.variation.game, figure.variation, figure),
+                      form_class: "inline",
+                      class: "cursor-pointer font-mono text-xs uppercase tracking-[0.14em] text-slate hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
               <% end %>
             </span>
           </div>

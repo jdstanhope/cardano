@@ -18,9 +18,13 @@ Rails.application.routes.draw do
       resources :combinations, only: %i[ create update destroy ], controller: "paytable_combinations"
       resources :calculations, only: %i[ create destroy ]
 
+      # A branch is made from the variation as it stands, or from one of its figures.
+      resource :branch, only: :create
+
       # A restoration is made from a figure, so it hangs off one.
       resources :figures, only: [] do
         resource :restoration, only: %i[ new create ]
+        resource :branch, only: :create, controller: "figure_branches"
       end
     end
   end

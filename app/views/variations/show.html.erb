@@ -3,9 +3,17 @@
 <div class="mx-auto max-w-3xl px-6 py-12 sm:py-16">
   <div class="border-b border-rule pb-6">
     <%= link_to @game.name, @game, class: "font-mono text-xs uppercase tracking-[0.18em] text-slate hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
-    <h1 class="mt-2 text-3xl font-semibold tracking-tight">
-      Variation <span class="font-mono"><%= @variation.label %></span>
-    </h1>
+    <div class="mt-2 flex flex-wrap items-baseline justify-between gap-4">
+      <h1 class="text-3xl font-semibold tracking-tight">
+        Variation <span class="font-mono"><%= @variation.label %></span>
+      </h1>
+
+      <%# Trying an alternative without risking the one that works. Variations exist to
+          hold exactly this, so it is a copy into a new one rather than an edit here. %>
+      <%= button_to "Copy to a new variation", game_variation_branch_path(@game, @variation),
+            class: "border border-rule px-3 py-1.5 font-mono text-xs font-medium uppercase tracking-[0.18em] text-slate hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+    </div>
+
     <p class="mt-2 font-mono text-xs text-slate">
       <%= @game.reel_count %>&times;<%= @game.row_count %> window
       <% if @variation.target_rtp_min %>
