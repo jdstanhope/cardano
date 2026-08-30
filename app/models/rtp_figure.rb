@@ -15,7 +15,8 @@ class RtpFigure < ApplicationRecord
   scope :newest_first, -> { order(created_at: :desc, id: :desc) }
 
   def self.record(variation, result)
-    fingerprint = RtpFingerprint.for(variation)
+    description = RtpFingerprint.new(variation)
+    fingerprint = description.to_s
     latest = variation.rtp_figures.newest_first.first
 
     # An unchanged configuration recomputes to the same figure. Recording it again
@@ -26,7 +27,8 @@ class RtpFigure < ApplicationRecord
       numerator: result.value.numerator,
       denominator: result.value.denominator,
       computed_by: result.method,
-      fingerprint: fingerprint
+      fingerprint: fingerprint,
+      inputs: description.inputs
     )
   end
 
@@ -42,4 +44,13 @@ class RtpFigure < ApplicationRecord
 
   # The difference from an earlier figure, in percentage points.
   def points_from(other) = ((value - other.value) * 100).to_f
+
+  # What changed between an earlier figure and this one. Nil when either has no stored
+  # description — figures recorded before snapshots existed cannot be compared, and
+  # saying nothing is better than implying nothing changed.
+  def changes_from(other)
+    return if inputs.blank? || other&.inputs.blank?
+
+    ConfigurationDiff.new(other.inputs, inputs)
+  end
 end
