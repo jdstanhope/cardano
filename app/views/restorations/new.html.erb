@@ -1,0 +1,78 @@
+<% content_for :title, "Restore — Variation #{@variation.label} — Cardano" %>
+
+<div class="mx-auto max-w-2xl px-6 py-12 sm:py-16">
+  <div class="border-b border-rule pb-6">
+    <%= link_to "#{@game.name} · Variation #{@variation.label}", [ @game, @variation ],
+          class: "font-mono text-xs uppercase tracking-[0.18em] text-slate hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+    <h1 class="mt-2 text-3xl font-semibold tracking-tight">Restore <%= @figure.to_percentage %></h1>
+    <p class="mt-2 font-mono text-xs text-slate">
+      recorded <%= @figure.created_at.strftime("%d %b %Y at %H:%M") %>
+    </p>
+  </div>
+
+  <% if @restore.possible? %>
+    <section data-restoring class="py-8">
+      <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Will be put back</h2>
+
+      <ul class="mt-3 space-y-1">
+        <% @restore.restoring.each do |line| %>
+          <li class="font-mono text-sm text-ink"><%= line %></li>
+        <% end %>
+      </ul>
+
+      <p class="mt-3 text-sm leading-relaxed text-slate">
+        Replacing what is on this variation now. What is there stays in the history and
+        can be restored back, so this is not a way to lose it.
+      </p>
+    </section>
+
+    <% if @restore.figure_will_differ? %>
+      <%# The honest part. These belong to the game and are shared with its other
+          variations, so putting them back here would rewrite what those compute. %>
+      <section data-leaving-alone class="border-t border-rule py-8">
+        <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink">Will not be put back</h2>
+
+        <ul class="mt-3 space-y-1">
+          <% @restore.leaving_alone.each do |change| %>
+            <li class="font-mono text-sm text-slate"><%= change %></li>
+          <% end %>
+        </ul>
+
+        <p class="mt-3 text-sm leading-relaxed text-slate">
+          These belong to the game and are shared with its other variations, so putting
+          them back here would change what those compute.
+          <strong class="font-medium text-ink">The figure after restoring will not be
+          <%= @figure.to_percentage %></strong>, because the game has changed since.
+        </p>
+      </section>
+    <% end %>
+
+    <div class="flex flex-wrap items-center gap-3 border-t border-rule pt-8">
+      <%= button_to "Restore this configuration", game_variation_figure_restoration_path(@game, @variation, @figure),
+            class: "cursor-pointer bg-ink px-5 py-3 font-mono text-xs font-medium uppercase tracking-[0.18em] text-paper hover:bg-ink/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+
+      <%= link_to "Cancel", [ @game, @variation ],
+            class: "font-mono text-xs uppercase tracking-[0.18em] text-slate hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+    </div>
+  <% else %>
+    <%# A configuration naming something the game no longer has cannot be rebuilt, and
+        rebuilding the rest would produce a paytable nobody asked for. %>
+    <section data-refused class="py-8">
+      <h2 class="font-mono text-xs font-medium uppercase tracking-[0.18em] text-alert">This cannot be restored</h2>
+
+      <ul class="mt-3 space-y-1">
+        <% @restore.refusals.each do |reason| %>
+          <li class="text-sm text-ink"><%= reason.upcase_first %></li>
+        <% end %>
+      </ul>
+
+      <p class="mt-3 max-w-lg text-sm leading-relaxed text-slate">
+        Putting part of it back would leave a paytable nobody described. Adding what is
+        missing to the game would make this restorable again.
+      </p>
+
+      <%= link_to "Back to the variation", [ @game, @variation ],
+            class: "mt-8 inline-block border border-ink px-4 py-2 font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+    </section>
+  <% end %>
+</div>
