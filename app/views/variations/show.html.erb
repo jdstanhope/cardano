@@ -20,6 +20,8 @@
         &middot; target <%= @variation.target_rtp_min_percentage %>&ndash;<%= @variation.target_rtp_max_percentage %>
       <% end %>
     </p>
+
+    <%= render "variations/note", variation: @variation %>
   </div>
 
   <section data-rtp class="border-b border-rule py-10">
