@@ -80,7 +80,7 @@ class RtpHistoryTest < ActionDispatch::IntegrationTest
     end
 
     assert_equal 4, @variation.rtp_figures.count
-    assert_select "[data-rtp] details ol li", 4
+    assert_select "[data-rtp] [data-figure]", 4
     assert_match(/History · 4 figures/, rtp_section)
   end
 
@@ -104,5 +104,25 @@ class RtpHistoryTest < ActionDispatch::IntegrationTest
 
     assert_match(/out of date/, rtp_section)
     assert_no_match(/before your last change/, rtp_section)
+  end
+
+  # "Was 87.49%" says the figure moved; this says what moved it.
+  test "the history says what changed between one figure and the last" do
+    view
+    @variation.paytable_entries.find_by(payout: 2400).update!(payout: 4800)
+    view
+
+    assert_select "[data-changes]", /R7 W7 B7: 2400 → 4800/
+  end
+
+  # A change to the game is shared with every other variation, so a reader should not
+  # take it for something done here.
+  test "a change belonging to the game is marked as the game's" do
+    view
+    @game.paylines.create!(position: 2, rows: [ 0, 0, 0 ])
+    view
+
+    assert_select "[data-changes]", /Paylines: 1 → 2/
+    assert_select "[data-changes]", /shared with its other variations/
   end
 end

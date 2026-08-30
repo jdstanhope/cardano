@@ -17,6 +17,11 @@ class RtpFingerprint
 
   def self.for(variation) = new(variation).to_s
 
+  # The description itself, which is what a diff compares and a restore puts back.
+  # Taken from the same builder as the hash, so the two cannot disagree about what a
+  # figure was computed from.
+  def self.inputs_for(variation) = new(variation).inputs
+
   def initialize(variation)
     @variation = variation
     @game = variation.game
