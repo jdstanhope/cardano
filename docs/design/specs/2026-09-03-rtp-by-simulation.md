@@ -115,6 +115,51 @@ This is exhaustive rather than sampled, it is cheap because the game is small, a
 the reason a second evaluation path is acceptable at all. One new mechanic means one new
 compiled assembly and one extension to this test.
 
+### The bitset has a boundary at 62 paytable entries
+
+One entry is one bit, so the whole bitset is a single machine word while a variation has
+at most 62 combinations. Past that Ruby's integers leave fixnum range and every `&`
+allocates. Measured on the intersection alone:
+
+```
+ 61 entries   505,759 line-groups/s   1.02x
+ 62 entries   509,860 line-groups/s   1.03x
+ 80 entries   259,554 line-groups/s   0.52x
+400 entries   219,739 line-groups/s   0.44x
+```
+
+Flat to the boundary, then half. It does not degrade further with size — 400 entries
+costs about what 80 does — because the cost is the allocation rather than the width.
+
+**Not worth solving yet.** The measured game has 27 entries and a rich one with twelve
+symbols across four lengths has 48; exceeding 62 takes a lot of bespoke mixed
+combinations, and the penalty when it happens is a factor of two rather than a wall.
+
+**The remedy, when it is wanted**, is to split the bitset into fixnum-sized banks.
+Trading one bignum `&` for three fixnum ones is close to a wash on its own, but entries
+are already ordered by descending payout, so bank zero holds the highest-paying ones:
+process banks in order and stop at the first with a survivor, and most spins never look
+past bank zero.
+
+### Building the window may be avoidable
+
+The evaluator as spiked materialises the window each spin, which costs a modulo per
+position:
+
+```ruby
+rows.times { |o| col[o] = strip[(stop + o) % lengths[reel]] }
+```
+
+But a payline reads one row per reel, and `alive[reel][window[reel][row]]` is a pure
+function of `(reel, stop, row)` — so it can be precomputed as `line_mask[reel][stop][row]`
+and the window never built at all. That is the same hoist the ways table already makes,
+applied to lines.
+
+Unmeasured, so it is not assumed. Pull request **a** implements the straightforward
+version first and compares the two; if the precomputed masks do not win, the simpler
+loop stays. The tables also cost memory proportional to reels x stops x rows, which is
+small but not nothing.
+
 ### Where it stops working
 
 Recorded so the limit is a known one rather than a surprise.
@@ -252,7 +297,7 @@ is cheapest to discover.
 
 | | | Verified by |
 | --- | --- | --- |
-| **a** | `SpinTable`, both mechanics | Agreement with `WinMechanic` across all 262,144 RWB outcomes |
+| **a** | `SpinTable`, both mechanics, and the per-stop mask comparison | Agreement with `WinMechanic` across all 262,144 RWB outcomes |
 | **b** | `Rtp::Simulation` — seeded draws, exact total, Welford | Same seed gives the same figure; RWB lands within its interval of 86.5761% |
 | **c** | `Rtp::Precision`, the coverage tally | Stops on precision; stops on ceiling; says which |
 | **d** | Persistence: seed, spins, interval, coverage, stop reason | Two sampled runs both record; `computed_by` round-trips |
