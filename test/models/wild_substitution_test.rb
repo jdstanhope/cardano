@@ -1,6 +1,8 @@
 require "test_helper"
 
 class WildSubstitutionTest < ActiveSupport::TestCase
+  include ActiveRecord::Assertions::QueryAssertions
+
   setup do
     @game = games(:five_by_three)
     @wild = game_symbols(:jack)
@@ -33,6 +35,22 @@ class WildSubstitutionTest < ActiveSupport::TestCase
 
     assert @wild.substitutes_for?(added),
       "a deny list has to fail toward substituting, or a later symbol is silently excluded"
+  end
+
+  # Evaluation asks this question millions of times over, so what it costs once is what
+  # it costs a million times. Asking the database on every check is the difference
+  # between an exact figure in thirteen seconds and one in over two minutes.
+  #
+  # A fresh instance is deliberate: the exclusions have to resolve once from a cold
+  # association, which is the state evaluation actually finds them in.
+  test "a wild resolves its exclusions once, however many times it is asked" do
+    @wild.excluded_symbols << @ace
+    others = @game.symbols.where.not(id: @wild.id).to_a
+    cold = GameSymbol.find(@wild.id)
+
+    assert_queries_count 1 do
+      3.times { others.each { |symbol| cold.substitutes_for?(symbol) } }
+    end
   end
 
   test "only a wild can carry exclusions" do

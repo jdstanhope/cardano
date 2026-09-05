@@ -61,11 +61,16 @@ class GameSymbol < ApplicationRecord
 
   # A wild substitutes for every symbol in its game except itself and the ones it has
   # been told to leave alone. Anything that is not wild substitutes for nothing.
+  #
+  # Loaded rather than queried. `include?` on an unloaded association issues an EXISTS
+  # query and caches nothing, so it asks again on every call — and evaluation asks this
+  # millions of times over. Loading once turns the deny list into an array comparison
+  # and leaves invalidation to the association, which `reload` already handles.
   def substitutes_for?(symbol)
     return false unless wild?
     return false if symbol == self
 
-    excluded_symbols.exclude?(symbol)
+    excluded_symbols.load.exclude?(symbol)
   end
 
   # Named Wild, so the marking is not a choice: it cannot be unmarked, and nothing
