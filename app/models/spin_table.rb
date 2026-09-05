@@ -12,11 +12,12 @@
 # because there is still only one definition of them.
 #
 # What is written twice is how a mechanic assembles wins, and SpinTableTest holds this to
-# WinMechanic across every one of Red White & Blue's 262,144 outcomes.
+# WinMechanic exhaustively — across every one of Red White & Blue's 262,144 outcomes, and
+# across small games built to exercise the rules that machine happens not to have.
 class SpinTable
   def self.for(variation)
     case variation.game.win_mechanic
-    when "ways" then raise NotImplementedError, "ways games cannot be compiled yet"
+    when "ways" then Ways.new(variation)
     else Lines.new(variation)
     end
   end
