@@ -35,6 +35,13 @@ class SpinTableTest < ActiveSupport::TestCase
     assert_agrees_with_the_mechanic mixed_variation, outcomes: 64
   end
 
+  # Ways selects differently enough from lines to be worth its own walk: every
+  # combination is measured, several pay at once, and each pays as many times as the
+  # arrangements allow.
+  test "the compiled table agrees on a ways game, where a combination pays many times" do
+    assert_agrees_with_the_mechanic ways_variation, outcomes: 64
+  end
+
   private
     def spins_from(table, seed:, count: 200)
       rng = Random.new(seed)
@@ -77,23 +84,53 @@ class SpinTableTest < ActiveSupport::TestCase
 
     # Three reels of three rows, four stops each: 64 outcomes, and every rule Red White
     # & Blue leaves untouched. A x2 combination stops short of the third reel, a wild
-    # lands on every strip, and one of the two paylines bends off the centre row.
+    # lands on every strip, a combination names a group, and one of the two paylines
+    # bends off the centre row.
     def mixed_variation
       game = users(:one).games.create!(name: "Mixed", reel_count: 3, row_count: 3)
-      codes = %w[ WD A K Q ]
-      symbols = codes.each_with_index.to_h do |code, position|
-        [ code, game.symbols.create!(code: code, name: code, position: position + 1, wild: code == "WD") ]
-      end
-
       game.paylines.create!(position: 1, rows: [ 0, 0, 0 ])
       game.paylines.create!(position: 2, rows: [ 1, 0, -1 ])
 
-      variation = game.variations.first
-      3.times { |reel| variation.reel_strips.create!(position: reel + 1, symbols: codes) }
+      build_variation(game, { %w[ A A ] => 5, %w[ A A A ] => 25, %w[ K K K ] => 10,
+                              %w[ Q Q ] => 2, %w[ Royals Royals Royals ] => 3 })
+    end
 
-      { %w[ A A ] => 5, %w[ A A A ] => 25, %w[ K K K ] => 10, %w[ Q Q ] => 2 }.each do |sequence, payout|
+    # Two rows, so a reel can offer a combination more than one matching position and the
+    # arrangements multiply above one.
+    #
+    # A x2 pays more than A x3 deliberately, which is unusual for a real paytable and the
+    # entire point. Ways takes the best *paying* combination in a family, not the longest,
+    # and while a longer combination always out-pays a shorter one the two rules cannot be
+    # told apart. Here A x2 wins when the third reel offers one match and loses when it
+    # offers two, so both branches occur inside the 64 outcomes.
+    def ways_variation
+      game = users(:one).games.create!(name: "Ways", reel_count: 3, row_count: 2, win_mechanic: "ways")
+
+      build_variation(game, { %w[ A A ] => 30, %w[ A A A ] => 25, %w[ K K K ] => 10,
+                              %w[ Royals Royals Royals ] => 3 })
+    end
+
+    # Four symbols, one of them wild, one group over two of them, and a strip per reel
+    # holding each symbol once — so every reel can show anything and the space stays at
+    # four stops.
+    def build_variation(game, table)
+      codes = %w[ WD A K Q ]
+      named = codes.each_with_index.to_h do |code, position|
+        [ code, game.symbols.create!(code: code, name: code, position: position + 1, wild: code == "WD") ]
+      end
+      named["Royals"] = game.symbol_groups.create!(name: "Royals", position: 1)
+      named["Royals"].game_symbols << [ named["A"], named["K"] ]
+
+      variation = game.variations.first
+      game.reel_count.times { |reel| variation.reel_strips.create!(position: reel + 1, symbols: codes) }
+
+      table.each do |sequence, payout|
         entry = variation.paytable_entries.new(payout: payout)
-        sequence.each_with_index { |code, index| entry.matchers.build(position: index + 1, game_symbol: symbols[code]) }
+        sequence.each_with_index do |label, index|
+          thing = named.fetch(label)
+          entry.matchers.build(position: index + 1,
+                               thing.is_a?(SymbolGroup) ? :symbol_group : :game_symbol => thing)
+        end
         entry.save!
       end
 
