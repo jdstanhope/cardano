@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_30_195212) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_06_191211) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -100,11 +100,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_195212) do
 
   create_table "rtp_figures", force: :cascade do |t|
     t.string "computed_by", null: false
+    t.integer "confidence"
+    t.jsonb "coverage"
     t.datetime "created_at", null: false
     t.decimal "denominator", null: false
     t.string "fingerprint", null: false
+    t.decimal "half_width"
     t.jsonb "inputs"
     t.decimal "numerator", null: false
+    t.bigint "spins"
     t.datetime "updated_at", null: false
     t.bigint "variation_id", null: false
     t.index ["variation_id", "created_at"], name: "index_rtp_figures_on_variation_id_and_created_at"
