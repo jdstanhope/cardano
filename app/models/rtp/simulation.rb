@@ -37,6 +37,13 @@ class Rtp
 
     attr_reader :seed, :confidence, :spins, :stopped_because
 
+    # How often each combination actually landed. Reported beside the interval rather
+    # than allowed to block a run: refusing to stop until every combination had been seen
+    # would run every simulation of a game with a rare one to its ceiling, and make the
+    # requested precision decorative. Saying what was seen leaves the judgement where it
+    # belongs.
+    def coverage = @table.coverage
+
     # Plays a fixed number of spins and reports where the estimate stands.
     def run(spins:)
       play(spins)

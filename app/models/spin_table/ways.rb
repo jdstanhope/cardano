@@ -17,15 +17,24 @@ class SpinTable
   # shorter combination with more arrangements can out-pay a longer one. Following the
   # mechanic is what the agreement test checks, so it is the mechanic that is followed.
   class Ways < SpinTable
-    Combination = Struct.new(:payout, :reels)
+    Combination = Struct.new(:payout, :reels, :position)
 
     def payout_at(stops)
       @families.sum do |family|
-        family.reduce(0) do |best, combination|
-          paid = combination.payout * arrangements(combination, stops)
+        best = 0
+        won = nil
 
-          paid > best ? paid : best
+        family.each do |combination|
+          paid = combination.payout * arrangements(combination, stops)
+          next unless paid > best
+
+          best = paid
+          won = combination.position
         end
+
+        @hits[won] += 1 if won
+
+        best
       end
     end
 
@@ -64,11 +73,14 @@ class SpinTable
           end
         end
 
-        @families = entries.group_by { |entry| entry.matchers.first&.label }.values.map do |family|
-          family.map do |entry|
+        @combinations = entries.map { |entry| [ entry.sequence.join(" "), entry.payout ] }
+        @hits = Array.new(entries.length, 0)
+
+        @families = entries.each_with_index.group_by { |entry, _| entry.matchers.first&.label }.values.map do |family|
+          family.map do |entry, position|
             reels = entry.matchers.each_with_index.map { |matcher, reel| [ reel, column[matcher.id] ] }
 
-            Combination.new(entry.payout, reels)
+            Combination.new(entry.payout, reels, position)
           end
         end
       end

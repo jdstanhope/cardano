@@ -35,7 +35,15 @@ class SpinTable
           break if live.zero?
         end
 
-        live.zero? ? 0 : @payout_for[live & -live]
+        next 0 if live.zero?
+
+        # The winning bit is already in hand, and a power of two's bit_length is its
+        # position plus one — so which combination won is integer arithmetic rather than
+        # a lookup, and both the payout and the tally index off it.
+        won = (live & -live).bit_length - 1
+        @hits[won] += 1
+
+        @payouts[won]
       end
     end
 
@@ -45,7 +53,9 @@ class SpinTable
         entries = variation.paytable.sort_by { |entry| -entry.payout }
         index = symbols.each_with_index.to_h { |symbol, position| [ symbol.code, position ] }
 
-        @payout_for = entries.each_with_index.to_h { |entry, position| [ 1 << position, entry.payout ] }
+        @payouts = entries.map(&:payout)
+        @combinations = entries.map { |entry| [ entry.sequence.join(" "), entry.payout ] }
+        @hits = Array.new(entries.length, 0)
         @strips = variation.reel_strips.sort_by(&:position).map { |strip| strip.symbols.map { |code| index[code] } }
         @stop_counts = @strips.map(&:length)
         @stake_units = WinMechanic.for(game).stake_units

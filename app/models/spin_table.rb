@@ -28,6 +28,20 @@ class SpinTable
     compile
   end
 
+  # One combination, and how often it actually won.
+  Seen = Struct.new(:combination, :payout, :hits)
+
+  # How often each combination won over every spin this table has evaluated.
+  #
+  # Ordered by payout, largest first, because that is the order in which an undersampled
+  # combination matters: the rare, heavily paying ones are what an interval is
+  # over-confident about before they land, and they should not need looking for.
+  def coverage
+    @combinations.each_with_index
+                 .map { |(combination, payout), index| Seen.new(combination, payout, @hits[index]) }
+                 .sort_by { |seen| -seen.payout }
+  end
+
   # How many units a spin costs, which is what a return is taken over.
   attr_reader :stake_units
 
