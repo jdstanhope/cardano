@@ -29,13 +29,36 @@ class Calculation < ApplicationRecord
 
   after_commit :show_the_change
 
+  # How many seeds there are to invent from. Large enough that two runs colliding is not
+  # a thing to think about, small enough to be a bigint.
+  SEEDS = 1 << 48
+
   def self.start(variation, computed_by: Rtp::EXACT)
-    create!(variation: variation, computed_by: computed_by, state: QUEUED,
-            fingerprint: RtpFingerprint.for(variation))
-      .tap { |calculation| RtpCalculationJob.perform_later(calculation) }
+    begin_run(variation, computed_by: computed_by)
   end
 
+  # A run that samples to the precision asked for, rather than evaluating.
+  #
+  # The seed is recorded, and invented when not given. A figure somebody disputes is the
+  # case this exists to serve, and one that cannot be recomputed to the same number
+  # cannot be looked into at all — so the seed is never left to chance twice.
+  def self.simulate(variation, precision:, seed: nil)
+    begin_run(variation,
+              computed_by: Rtp::SAMPLED,
+              seed: seed || SecureRandom.random_number(SEEDS),
+              precision_points: (precision.points * 100).round,
+              confidence: precision.confidence,
+              ceiling: precision.ceiling)
+  end
+
+  def self.begin_run(variation, **attributes)
+    create!(variation: variation, state: QUEUED, fingerprint: RtpFingerprint.for(variation), **attributes)
+      .tap { |calculation| RtpCalculationJob.perform_later(calculation) }
+  end
+  private_class_method :begin_run
+
   def in_flight? = IN_FLIGHT.include?(state)
+  def sampled? = computed_by == Rtp::SAMPLED.to_s
   def done? = state == DONE
   def failed? = state == FAILED
   def cancelled? = state == CANCELLED
@@ -60,18 +83,42 @@ class Calculation < ApplicationRecord
     return if cancelled?
 
     running!
-    result = variation.rtp
-
-    if result.respond_to?(:exact?)
-      finish(DONE, rtp_figure: RtpFigure.record(variation, result))
-    else
-      finish(FAILED, failure: result.to_s)
-    end
+    sampled? ? by_sampling : by_evaluation
   rescue StandardError => e
     finish(FAILED, failure: "#{e.class}: #{e.message}".truncate(200))
   end
 
   private
+    def by_evaluation
+      result = variation.rtp
+
+      if result.respond_to?(:exact?)
+        finish(DONE, rtp_figure: RtpFigure.record(variation, result))
+      else
+        finish(FAILED, failure: result.to_s)
+      end
+    end
+
+    # Asked before compiling anything. A description missing a reel would blow up inside
+    # the compiler, and that is a result to show rather than a stack trace to catch.
+    def by_sampling
+      missing = Rtp.new(variation).missing_pieces
+      return finish(FAILED, failure: missing.to_sentence) if missing.any?
+
+      simulation = Rtp::Simulation.new(variation, seed: seed)
+      result = simulation.run_to(precision)
+
+      self.spins = simulation.spins
+      self.stopped_because = simulation.stopped_because
+
+      finish(DONE, rtp_figure: RtpFigure.record(variation, result,
+                                                spins: simulation.spins, coverage: simulation.coverage))
+    end
+
+    # Stored in basis points, the unit a target band already uses.
+    def precision
+      Rtp::Precision.new(points: precision_points / 100.0, confidence: confidence, ceiling: ceiling)
+    end
     def finish(state, rtp_figure: nil, failure: nil)
       update!(state: state, finished_at: Time.current, rtp_figure: rtp_figure, failure: failure)
     end

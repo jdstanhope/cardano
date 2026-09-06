@@ -10,19 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_06_191211) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_06_192532) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "calculations", force: :cascade do |t|
+    t.bigint "ceiling"
     t.string "computed_by", null: false
+    t.integer "confidence"
     t.datetime "created_at", null: false
     t.string "failure"
     t.string "fingerprint", null: false
     t.datetime "finished_at"
+    t.integer "precision_points"
     t.bigint "rtp_figure_id"
+    t.bigint "seed"
+    t.bigint "spins"
     t.datetime "started_at"
     t.string "state", null: false
+    t.string "stopped_because"
     t.datetime "updated_at", null: false
     t.bigint "variation_id", null: false
     t.index ["rtp_figure_id"], name: "index_calculations_on_rtp_figure_id"
