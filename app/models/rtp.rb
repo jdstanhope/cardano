@@ -9,12 +9,34 @@
 # Evaluating exactly and then rounding through floating point would give up the thing
 # the exactness was for.
 class Rtp
-  # How a figure was arrived at. Only one method exists today; it is recorded from the
-  # start so a simulated figure can never be mistaken for an exact one when Monte Carlo
-  # arrives for games too large or too dynamic to evaluate.
+  # How a figure was arrived at, recorded so a simulated figure can never be mistaken for
+  # an exact one. Exact evaluation reasons about probabilities; sampling plays the game
+  # and counts. Both produce a return, and only one of them is the return.
   EXACT = :exact
+  SAMPLED = :sampled
 
-  Result = Struct.new(:value, :method, keyword_init: true) do
+  # How far a sampled figure might be from the truth, and how sure that claim is.
+  #
+  # Floating point deliberately. The figure itself is a count over a count and stays
+  # exactly rational; this is an estimate of an estimate, and giving it the same
+  # arithmetic would dress a guess up as a measurement.
+  Interval = Struct.new(:half_width, :confidence, keyword_init: true) do
+    # Standard normal deviates for the confidences the tool offers. A table rather than an
+    # inverse normal function, because three values is the whole requirement and a general
+    # one would be more code doing less that can be checked by eye.
+    DEVIATES = { 90 => 1.645, 95 => 1.960, 99 => 2.576 }.freeze
+
+    def self.for(standard_error:, confidence:)
+      new(half_width: DEVIATES.fetch(confidence) * standard_error, confidence: confidence)
+    end
+
+    # In percentage points, which is the unit a target band is argued in.
+    def points = half_width * 100
+
+    def to_s = format("+/-%.2f points at %d%%", points, confidence)
+  end
+
+  Result = Struct.new(:value, :method, :interval, keyword_init: true) do
     def exact? = method == EXACT
 
     # As a percentage, rounded only here.
