@@ -58,6 +58,27 @@ class SampledFiguresTest < ActionDispatch::IntegrationTest
       "blanks land constantly and nothing about them is in doubt"
   end
 
+  # A twenty thousand spin sample of a machine with a 2400 combination is nowhere near
+  # settled, and the page must not turn where it happened to land into a verdict on the
+  # game. The interval here spans some eighteen points either side of the band.
+  test "a figure too uncertain to judge against the band says so, rather than missing it" do
+    sample
+
+    get game_variation_url(@game, @variation)
+
+    assert_select "[data-standing='unsettled']", 1
+    assert_select "[data-standing='below']", 0
+    assert_match(/the interval reaches past it/, rtp_section)
+  end
+
+  test "an exact figure is still judged against the band as a point" do
+    perform_enqueued_jobs { get game_variation_url(@game, @variation) }
+
+    get game_variation_url(@game, @variation)
+
+    assert_select "[data-standing='inside']", 1
+  end
+
   test "a run says why it stopped" do
     sample
 

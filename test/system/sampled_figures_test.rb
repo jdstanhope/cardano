@@ -20,6 +20,8 @@ class SampledFiguresTest < ApplicationSystemTestCase
     assert_text "20,000 spins"
     assert_text "stopped on ceiling"
     assert_selector "[data-combination='R7 W7 B7'][data-thin]"
+    assert_text "NOT SETTLED"
+    assert_no_text "BELOW BAND"
   end
 
   test "an exact figure is still shown as one, with nothing it might be out by" do
