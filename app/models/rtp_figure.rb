@@ -19,6 +19,12 @@ class RtpFigure < ApplicationRecord
 
   scope :newest_first, -> { order(created_at: :desc, id: :desc) }
 
+  # Below this a combination has been seen too few times for its contribution to the
+  # spread to have been established, so an interval computed without it is confident
+  # about ground it has not covered. A judgement rather than a theorem: it is roughly
+  # where a count starts behaving like a rate rather than like an accident.
+  WELL_SEEN = 20
+
   def self.record(variation, result, spins: nil, coverage: nil)
     description = RtpFingerprint.new(variation)
     fingerprint = description.to_s
