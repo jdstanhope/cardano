@@ -33,7 +33,7 @@ class Rtp
     # In percentage points, which is the unit a target band is argued in.
     def points = half_width * 100
 
-    def to_s = format("+/-%.2f points at %d%%", points, confidence)
+    def to_s = format("±%.2f points at %d%%", points, confidence)
   end
 
   Result = Struct.new(:value, :method, :interval, keyword_init: true) do

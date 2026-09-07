@@ -27,6 +27,11 @@
               <%= calculation.state %>
             </span>
             <span class="font-mono text-xs text-slate"><%= calculation.computed_by %></span>
+            <%# Reaching the ceiling short of the precision is a result rather than a
+                failure, so it is stated rather than left to be inferred from the width. %>
+            <% if calculation.stopped_because %>
+              <span class="font-mono text-xs text-slate">stopped on <%= calculation.stopped_because %></span>
+            <% end %>
           </span>
 
           <span class="flex items-baseline gap-4 font-mono text-xs text-slate">
