@@ -1,0 +1,53 @@
+<%# Asking for a figure by how accurate it needs to be, rather than by how long to spend.
+    How many spins that takes depends on the game's volatility, which is arithmetic the
+    tool does as it goes and the person cannot do at all.
+
+    Every choice is from a list. The ceiling is the only thing bounding how long a run
+    holds a worker, and a number field is an invitation to type a trillion into it. %>
+<details data-simulation class="mt-4">
+  <summary data-simulation-toggle class="cursor-pointer font-mono text-xs uppercase tracking-[0.14em] text-slate hover:text-ink">
+    Run a simulation
+  </summary>
+
+  <%= form_with url: game_variation_simulation_path(game, variation), method: :post, class: "mt-4 max-w-xl" do |form| %>
+    <div class="flex flex-wrap items-end gap-x-6 gap-y-4">
+      <div>
+        <%= form.label :points, "Precision", class: "block font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink" %>
+        <%= form.select :points,
+              options_for_select(Rtp::Precision::POINTS.map { |points| [ "±#{"%.2f" % points} points", points ] },
+                                 Rtp::Precision::DEFAULTS[:points]),
+              {}, class: "mt-2 border border-rule bg-white px-3 py-2 font-mono text-sm text-ink focus:border-ink focus:outline-none" %>
+      </div>
+
+      <div>
+        <%= form.label :confidence, "Confidence", class: "block font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink" %>
+        <%= form.select :confidence,
+              options_for_select(Rtp::Precision::CONFIDENCES.map { |percent| [ "#{percent}%", percent ] },
+                                 Rtp::Precision::DEFAULTS[:confidence]),
+              {}, class: "mt-2 border border-rule bg-white px-3 py-2 font-mono text-sm text-ink focus:border-ink focus:outline-none" %>
+      </div>
+
+      <div>
+        <%# Reaching this short of the precision is a result, not a failure: it says how
+            accurate the figure could be made in the time allowed. %>
+        <%= form.label :ceiling, "Ceiling", class: "block font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink" %>
+        <%= form.select :ceiling,
+              options_for_select(Rtp::Precision::CEILINGS.map { |spins| [ "#{number_with_delimiter spins} spins", spins ] },
+                                 Rtp::Precision::DEFAULTS[:ceiling]),
+              {}, class: "mt-2 border border-rule bg-white px-3 py-2 font-mono text-sm text-ink focus:border-ink focus:outline-none" %>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <%# A figure somebody disputes is what this is for: paste the seed a run recorded
+          and it produces that run again, exactly. %>
+      <%= form.label :seed, "Seed", class: "block font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink" %>
+      <%= form.text_field :seed, placeholder: "blank for a new one",
+            class: "mt-2 block w-full max-w-xs border border-rule bg-white px-3 py-2 font-mono text-sm text-ink focus:border-ink focus:outline-none" %>
+      <p class="mt-2 text-sm text-slate">Set one to reproduce a run exactly.</p>
+    </div>
+
+    <%= form.submit "Start sampling",
+          class: "mt-4 cursor-pointer border border-ink px-4 py-2 font-mono text-xs font-medium uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" %>
+  <% end %>
+</details>

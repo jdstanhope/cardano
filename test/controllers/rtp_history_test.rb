@@ -25,7 +25,9 @@ class RtpHistoryTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/86\.58%/, rtp_section)
     assert_no_match(/before your last change/, rtp_section)
-    assert_select "[data-rtp] details", 0
+    # Addressed by its own marker rather than as "the only details on the page", which
+    # it no longer is — asking for a simulation is a disclosure in this section too.
+    assert_select "[data-history-toggle]", 0
   end
 
   test "a change shows what the figure was before it" do
