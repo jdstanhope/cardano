@@ -17,6 +17,9 @@ Rails.application.routes.draw do
       resource :paytable, only: %i[ update ]
       resources :combinations, only: %i[ create update destroy ], controller: "paytable_combinations"
       resources :calculations, only: %i[ create destroy ]
+      # A simulation is a kind of calculation, but asking for one takes a precision and a
+      # ceiling rather than nothing at all, so it gets its own door.
+      resource :simulation, only: :create
 
       # A branch is made from the variation as it stands, or from one of its figures.
       resource :branch, only: :create
