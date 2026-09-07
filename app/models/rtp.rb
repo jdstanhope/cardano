@@ -46,14 +46,34 @@ class Rtp
 
     # Whether the figure lands inside a variation's target band, or nil when it has
     # none to be measured against.
+    #
+    # Judged on the range the figure might be in rather than on the figure itself. For an
+    # exact figure those are the same thing and this answers exactly as it always did.
+    # For a sampled one they are not: an interval reaching past an edge means the run has
+    # not distinguished the two sides yet, and saying "below band" on the strength of
+    # where the midpoint fell would report a property of the sample as a property of the
+    # game — which is the whole thing carrying an interval is meant to prevent.
     def against(minimum, maximum)
       return if minimum.nil? || maximum.nil?
 
-      points = basis_points
-      return :below if points < minimum
-      return :above if points > maximum
+      low, high = bounds
+      return :unsettled if low.nil?
+      return :below if high < minimum
+      return :above if low > maximum
+      return :inside if low >= minimum && high <= maximum
 
-      :inside
+      :unsettled
+    end
+
+    # The range the figure might actually be in, in basis points. A run too short to have
+    # measured any spread says its interval is infinite, and there is no range to give.
+    def bounds
+      return [ basis_points, basis_points ] if interval.nil?
+      return unless interval.half_width.finite?
+
+      margin = (interval.half_width * 10_000).round
+
+      [ basis_points - margin, basis_points + margin ]
     end
   end
 

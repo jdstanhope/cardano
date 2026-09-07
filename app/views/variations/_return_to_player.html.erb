@@ -46,11 +46,16 @@
         <span class="font-mono text-xs uppercase tracking-[0.18em] text-alert">out of date</span>
         <span class="font-mono text-xs text-slate">the description has changed since</span>
       <% elsif standing %>
-        <span class="font-mono text-xs uppercase tracking-[0.18em] <%= standing == :inside ? "text-signal" : "text-alert" %>">
-          <%= { inside: "in band", below: "below band", above: "above band" }[standing] %>
+        <%# The standing is in the markup as well as the text, so a test does not have to
+            assert on styling. Not settled is neither good news nor bad: it is the run
+            saying it cannot tell yet, so it takes neither the signal colour nor the
+            alert one. %>
+        <span data-standing="<%= standing %>"
+              class="font-mono text-xs uppercase tracking-[0.18em] <%= { inside: "text-signal", unsettled: "text-slate" }.fetch(standing, "text-alert") %>">
+          <%= { inside: "in band", below: "below band", above: "above band", unsettled: "not settled" }[standing] %>
         </span>
         <span class="font-mono text-xs text-slate">
-          target <%= variation.target_rtp_min_percentage %>&ndash;<%= variation.target_rtp_max_percentage %>
+          target <%= variation.target_rtp_min_percentage %>&ndash;<%= variation.target_rtp_max_percentage %><%= " &middot; the interval reaches past it".html_safe if standing == :unsettled %>
         </span>
       <% else %>
         <span class="font-mono text-xs text-slate">no target set</span>
