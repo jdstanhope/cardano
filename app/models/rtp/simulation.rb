@@ -51,12 +51,24 @@ class Rtp
       result
     end
 
-    # Plays until the precision says to stop, and records which of its two reasons it
-    # was. Asked before the first batch as well as after every one, so a ceiling of
-    # nothing stops immediately rather than playing a batch it was never allowed.
-    def run_to(precision)
+    # Plays until the precision says to stop, or until whatever is watching says to.
+    #
+    # Both reasons are weighed in one place, before each batch, and precision is weighed
+    # first: a run that reached the accuracy it was asked for on the same batch somebody
+    # stopped it has finished, and reporting the interruption would describe how it ended
+    # rather than what it achieved. Asking after playing instead would silently reverse
+    # that, because the interruption would be seen a batch before the precision it
+    # coincided with.
+    #
+    # Nothing can interrupt a run that has not played yet, so a stopped run always has a
+    # figure to show for itself.
+    #
+    # `interrupted` is anything that answers `call`, deliberately — a run should not have
+    # to know that the thing watching it is a database row.
+    def run_to(precision, interrupted: nil)
       loop do
         @stopped_because = precision.reached(spins: spins, interval: interval(precision.confidence))
+        @stopped_because ||= :cancelled if spins.positive? && interrupted&.call
         break if stopped_because
 
         play(precision.batch(spins))
