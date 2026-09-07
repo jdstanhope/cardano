@@ -106,13 +106,29 @@ class Calculation < ApplicationRecord
       return finish(FAILED, failure: missing.to_sentence) if missing.any?
 
       simulation = Rtp::Simulation.new(variation, seed: seed)
-      result = simulation.run_to(precision)
+      result = simulation.run_to(precision, interrupted: method(:cancelled_elsewhere?))
 
       self.spins = simulation.spins
       self.stopped_because = simulation.stopped_because
 
-      finish(DONE, rtp_figure: RtpFigure.record(variation, result,
-                                                spins: simulation.spins, coverage: simulation.coverage))
+      # A stopped run keeps what it found. Usually it was stopped for taking too long,
+      # and the figure so far is the thing that was wanted — nothing is overstated by
+      # keeping it, because the interval is wide and the coverage thin and the page shows
+      # both. This is where sampling legitimately differs from evaluation: an exact run
+      # cancelled part way has no partial answer, and a sampled one does.
+      finish(simulation.stopped_because == :cancelled ? CANCELLED : DONE,
+             rtp_figure: RtpFigure.record(variation, result,
+                                          spins: simulation.spins, coverage: simulation.coverage))
+    end
+
+    # Whether somebody has stopped this run since it started, which only the database
+    # knows — the person who pressed the button was in another process.
+    #
+    # Read past the query cache. A job runs inside one, so a repeated read of this row is
+    # answered from memory: the run would see the state it began with for the rest of its
+    # life, never notice the cancellation, and leave nothing in the log to say why.
+    def cancelled_elsewhere?
+      self.class.uncached { self.class.where(id: id).pick(:state) == CANCELLED }
     end
 
     # Stored in basis points, the unit a target band already uses.
