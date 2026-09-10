@@ -43,7 +43,7 @@ gem "thruster", require: false
 # image_processing 2.0 no longer depends on a backend, so ruby-vips must be declared
 # explicitly. Active Storage defaults variant_processor to :vips and eager-loads its
 # transformer at boot, so omitting it breaks startup, not just variant generation.
-gem "image_processing", "~> 2.0"
+gem "image_processing", "~> 2.1"
 # require: false because Bundler.require would otherwise dlopen libvips during boot in
 # every environment. image_processing loads it lazily when a variant is processed, so
 # only the jobs that actually handle images need the system library present.
